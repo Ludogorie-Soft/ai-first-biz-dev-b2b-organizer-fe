@@ -1,0 +1,106 @@
+import axios from 'axios'
+
+// We import the store lazily to avoid circular dependency issues
+let getAuthState: () => { token: string | null; refreshToken: () => Promise<string | null>; logout: () => void }
+
+export function setAuthStateGetter(fn: typeof getAuthState) {
+  getAuthState = fn
+}
+
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+})
+
+api.interceptors.request.use((config) => {
+  if (getAuthState) {
+    const token = getAuthState().token
+    if (token) config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    if (error.response?.status === 401 && getAuthState) {
+      const { refreshToken, logout } = getAuthState()
+      const newToken = await refreshToken()
+      if (newToken) {
+        error.config.headers.Authorization = `Bearer ${newToken}`
+        return api.request(error.config)
+      }
+      logout()
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+// Auth
+export const login = (email: string, password: string) =>
+  api.post('/auth/login', { email, password }).then((r) => r.data)
+export const register = (email: string, password: string, company_name: string) =>
+  api.post('/auth/register', { email, password, company_name }).then((r) => r.data)
+export const refreshSession = (refresh_token: string) =>
+  api.post('/auth/refresh', { refresh_token }).then((r) => r.data)
+
+// Company
+export const getCompany = () => api.get('/company').then((r) => r.data)
+export const updateCompany = (data: object) => api.patch('/company', data).then((r) => r.data)
+export const getCompanyUsers = () => api.get('/company/users').then((r) => r.data)
+
+// Mailboxes
+export const getMailboxes = () => api.get('/mailboxes').then((r) => r.data)
+export const createMailbox = (data: object) => api.post('/mailboxes', data).then((r) => r.data)
+export const deleteMailbox = (id: string) => api.delete(`/mailboxes/${id}`).then((r) => r.data)
+
+// Target Groups
+export const getTargetGroups = () => api.get('/target-groups').then((r) => r.data)
+export const createTargetGroup = (data: object) =>
+  api.post('/target-groups', data).then((r) => r.data)
+export const deleteTargetGroup = (id: string) =>
+  api.delete(`/target-groups/${id}`).then((r) => r.data)
+
+// Leads
+export const getLeads = (params?: object) =>
+  api.get('/leads', { params }).then((r) => r.data)
+export const previewLeads = (file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post('/leads/preview', fd).then((r) => r.data)
+}
+export const importLeads = (file: File, target_group_id: string, column_map?: object) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  fd.append('target_group_id', target_group_id)
+  if (column_map) fd.append('column_map', JSON.stringify(column_map))
+  return api.post('/leads/import', fd).then((r) => r.data)
+}
+export const updateLead = (id: string, data: object) =>
+  api.patch(`/leads/${id}`, data).then((r) => r.data)
+
+// Sequences
+export const getSequences = () => api.get('/sequences').then((r) => r.data)
+export const getSequence = (id: string) => api.get(`/sequences/${id}`).then((r) => r.data)
+export const createSequence = (data: object) => api.post('/sequences', data).then((r) => r.data)
+export const deleteSequence = (id: string) =>
+  api.delete(`/sequences/${id}`).then((r) => r.data)
+export const addStep = (sequenceId: string, data: object) =>
+  api.post(`/sequences/${sequenceId}/steps`, data).then((r) => r.data)
+export const updateStep = (sequenceId: string, stepId: string, data: object) =>
+  api.patch(`/sequences/${sequenceId}/steps/${stepId}`, data).then((r) => r.data)
+export const deleteStep = (sequenceId: string, stepId: string) =>
+  api.delete(`/sequences/${sequenceId}/steps/${stepId}`).then((r) => r.data)
+
+// Campaigns
+export const getCampaigns = () => api.get('/campaigns').then((r) => r.data)
+export const getCampaign = (id: string) => api.get(`/campaigns/${id}`).then((r) => r.data)
+export const createCampaign = (data: object) => api.post('/campaigns', data).then((r) => r.data)
+export const updateCampaign = (id: string, data: object) =>
+  api.patch(`/campaigns/${id}`, data).then((r) => r.data)
+export const deleteCampaign = (id: string) =>
+  api.delete(`/campaigns/${id}`).then((r) => r.data)
+export const getCampaignStats = (id: string) =>
+  api.get(`/campaigns/${id}/stats`).then((r) => r.data)
