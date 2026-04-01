@@ -85,6 +85,7 @@ export const bg = {
   'sequences.days': 'дни',
   'sequences.variables': 'Налични променливи',
   'sequences.autoCalculated': 'Автоматично изчислено',
+  'sequences.variablesHint': 'Кликни за вмъкване · Дръпни в полето',
   'sequences.editStep': 'Редактирай стъпка',
   'sequences.creating': 'Създаване...',
   'sequences.saving': 'Запазване...',

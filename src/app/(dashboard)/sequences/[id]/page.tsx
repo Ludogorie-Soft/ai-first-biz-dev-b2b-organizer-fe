@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Trash2, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useRef, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { getSequence, addStep, updateStep, deleteStep } from '@/lib/api'
@@ -15,10 +15,10 @@ import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { PageLoader } from '@/components/shared/LoadingSpinner'
+import { VariableEditor, type VariableEditorHandle } from '@/components/sequences/VariableEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
@@ -27,6 +27,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+
+const VARIABLES = ['{{first_name}}', '{{last_name}}', '{{email}}', '{{full_name}}'] as const
 
 interface Step {
   id: string
@@ -67,12 +69,35 @@ export default function SequenceDetailPage() {
   const sequence = data || {}
   const steps: Step[] = (data as any)?.sequence_steps ?? []
 
+  const subjectInputRef = useRef<HTMLInputElement>(null)
+  const bodyEditorRef = useRef<VariableEditorHandle>(null)
+
   const {
     register,
     handleSubmit,
     reset,
+    control,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<StepFormData>({ resolver: zodResolver(stepSchema) })
+
+  function insertVariable(variable: string) {
+    // Insert into whichever field is currently active, defaulting to body
+    const active = document.activeElement
+    if (active === subjectInputRef.current) {
+      const input = subjectInputRef.current
+      const start = input?.selectionStart ?? (getValues('subject') || '').length
+      const end = input?.selectionEnd ?? start
+      const current = getValues('subject') || ''
+      setValue('subject', current.slice(0, start) + variable + current.slice(end), { shouldValidate: true })
+      requestAnimationFrame(() => {
+        if (input) input.selectionStart = input.selectionEnd = start + variable.length
+      })
+    } else {
+      bodyEditorRef.current?.insertVariable(variable)
+    }
+  }
 
   function openAddDialog() {
     setEditingStep(null)
@@ -264,32 +289,56 @@ export default function SequenceDetailPage() {
               <Label>{t['sequences.subject']}</Label>
               <Input
                 {...register('subject')}
+                ref={(el) => {
+                  register('subject').ref(el)
+                  subjectInputRef.current = el
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const variable = e.dataTransfer.getData('text/plain')
+                  if (variable?.startsWith('{{')) insertVariable(variable)
+                }}
+                onDragOver={(e) => e.preventDefault()}
                 className={errors.subject ? 'border-red-300' : ''}
               />
             </div>
 
+            {/* Variable chips */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-slate-500">{t['sequences.variables']}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {VARIABLES.map((variable) => (
+                  <button
+                    key={variable}
+                    type="button"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', variable)}
+                    onClick={() => insertVariable(variable)}
+                    className="cursor-grab active:cursor-grabbing px-2 py-0.5 rounded text-xs font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors select-none"
+                    title="Click to insert · Drag to field"
+                  >
+                    {variable}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400">{t['sequences.variablesHint']}</p>
+            </div>
+
             <div className="space-y-1.5">
               <Label>{t['sequences.body']}</Label>
-              <Textarea
-                rows={6}
-                {...register('body')}
-                className={errors.body ? 'border-red-300' : ''}
+              <Controller
+                name="body"
+                control={control}
+                render={({ field }) => (
+                  <VariableEditor
+                    ref={bodyEditorRef}
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    hasError={!!errors.body}
+                    rows={6}
+                  />
+                )}
               />
-              <p className="text-xs text-slate-400">
-                {t['sequences.variables']}:{' '}
-                <code className="bg-slate-100 px-1 rounded text-slate-600">
-                  {'{{first_name}}'}
-                </code>{' '}
-                <code className="bg-slate-100 px-1 rounded text-slate-600">
-                  {'{{last_name}}'}
-                </code>{' '}
-                <code className="bg-slate-100 px-1 rounded text-slate-600">
-                  {'{{email}}'}
-                </code>{' '}
-                <code className="bg-slate-100 px-1 rounded text-slate-600">
-                  {'{{full_name}}'}
-                </code>
-              </p>
             </div>
 
             <DialogFooter>

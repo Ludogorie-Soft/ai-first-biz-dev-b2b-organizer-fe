@@ -85,6 +85,7 @@ export const en = {
   'sequences.days': 'days',
   'sequences.variables': 'Available variables',
   'sequences.autoCalculated': 'Auto-calculated',
+  'sequences.variablesHint': 'Click to insert · Drag to field',
   'sequences.editStep': 'Edit step',
   'sequences.creating': 'Creating...',
   'sequences.saving': 'Saving...',
