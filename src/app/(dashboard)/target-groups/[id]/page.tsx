@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Upload, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Upload, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef } from 'react'
-import { getLeads, previewLeads, importLeads } from '@/lib/api'
+import { getLeads, previewLeads, importLeads, updateLead } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -71,6 +71,15 @@ export default function TargetGroupDetailPage() {
   const leads: Lead[] = data?.leads || data?.data || data || []
   const total = data?.total || data?.count || leads.length
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  const resetLeadMutation = useMutation({
+    mutationFn: (leadId: string) => updateLead(leadId, { status: 'active' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all({ target_group_id: id }) })
+      toast.success(t['common.success'])
+    },
+    onError: () => toast.error(t['common.error']),
+  })
 
   const importMutation = useMutation({
     mutationFn: () => importLeads(selectedFile!, id, columnMap),
@@ -178,6 +187,7 @@ export default function TargetGroupDetailPage() {
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     {t['common.notes']}
                   </TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,6 +201,21 @@ export default function TargetGroupDetailPage() {
                     </TableCell>
                     <TableCell className="text-slate-400 text-sm max-w-xs truncate">
                       {lead.notes ?? '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {lead.status !== 'active' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-slate-400 hover:text-indigo-600"
+                          onClick={() => resetLeadMutation.mutate(lead.id)}
+                          disabled={resetLeadMutation.isPending}
+                          title="Reset to active"
+                        >
+                          <RotateCcw className="h-3 w-3 mr-1" />
+                          Reset
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
