@@ -12,6 +12,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { queryClient } from '@/app/providers'
 import { useLangStore } from '@/stores/langStore'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,7 @@ export function Sidebar() {
 
   function handleLogout() {
     logout()
+    queryClient.clear()
     router.push('/login')
   }
 

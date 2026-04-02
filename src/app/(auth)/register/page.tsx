@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { register as registerApi } from '@/lib/api'
-import { useAuthStore } from '@/stores/authStore'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,8 +24,6 @@ type FormData = z.infer<typeof schema>
 export default function RegisterPage() {
   const t = useTranslations()
   const router = useRouter()
-  const { setAuth } = useAuthStore()
-
   const {
     register,
     handleSubmit,
@@ -36,19 +33,12 @@ export default function RegisterPage() {
   const mutation = useMutation({
     mutationFn: ({ email, password, company_name }: FormData) =>
       registerApi(email, password, company_name),
-    onSuccess: (data) => {
-      const token = data.token || data.access_token
-      const refreshToken = data.refresh_token || data.refreshToken || ''
-      const user = data.user || { id: data.id || '', email: data.email || '' }
-      if (token) {
-        setAuth(token, refreshToken, user)
-        router.push('/campaigns')
-      } else {
-        router.push('/login')
-      }
+    onSuccess: (_data, variables) => {
+      router.push(`/verify-email?email=${encodeURIComponent(variables.email)}`)
     },
-    onError: () => {
-      toast.error(t['common.error'])
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      toast.error(msg ?? t['common.error'])
     },
   })
 

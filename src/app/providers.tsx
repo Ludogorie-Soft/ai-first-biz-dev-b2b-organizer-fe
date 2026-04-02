@@ -2,42 +2,37 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { setAuthStateGetter } from '@/lib/api'
 
-function AuthInitializer({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    setAuthStateGetter(() => {
-      const state = useAuthStore.getState()
-      return {
-        token: state.token,
-        refreshToken: state.refreshToken,
-        logout: state.logout,
-      }
-    })
-  }, [])
+// Singleton so login/logout handlers can clear the cache from anywhere.
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      retry: 1,
+    },
+  },
+})
 
-  return <>{children}</>
-}
+// Wire up the auth getter synchronously at module load time so the token
+// is available before TanStack Query fires its first requests on mount.
+setAuthStateGetter(() => {
+  const state = useAuthStore.getState()
+  return {
+    token: state.token,
+    refreshToken: state.refreshToken,
+    logout: state.logout,
+  }
+})
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000,
-            retry: 1,
-          },
-        },
-      })
-  )
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthInitializer>{children}</AuthInitializer>
+      {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )
 }
+

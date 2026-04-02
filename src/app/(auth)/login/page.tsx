@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { login } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
+import { queryClient } from '@/app/providers'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,11 +39,13 @@ export default function LoginPage() {
       const token = data.token || data.access_token
       const refreshToken = data.refresh_token || data.refreshToken || ''
       const user = data.user || { id: data.id || '', email: data.email || '' }
+      queryClient.clear()
       setAuth(token, refreshToken, user)
       router.push('/campaigns')
     },
-    onError: () => {
-      toast.error(t['common.error'])
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+      toast.error(msg ?? t['common.error'])
     },
   })
 

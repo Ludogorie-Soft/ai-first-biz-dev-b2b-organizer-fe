@@ -22,12 +22,25 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    if (error.response?.status === 401 && getAuthState) {
+    const originalRequest = error.config
+    // Only intercept authenticated requests (those with a Bearer token).
+    // Auth endpoints (login, register, verify) have no Authorization header
+    // and must never trigger the refresh/logout cycle.
+    const isRefreshCall = originalRequest?.url?.includes('/auth/refresh')
+    const hadAuthHeader = !!originalRequest?.headers?.Authorization
+    if (
+      error.response?.status === 401 &&
+      getAuthState &&
+      !originalRequest?._retry &&
+      !isRefreshCall &&
+      hadAuthHeader
+    ) {
+      originalRequest._retry = true
       const { refreshToken, logout } = getAuthState()
       const newToken = await refreshToken()
       if (newToken) {
-        error.config.headers.Authorization = `Bearer ${newToken}`
-        return api.request(error.config)
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        return api.request(originalRequest)
       }
       logout()
       if (typeof window !== 'undefined') {
@@ -45,6 +58,8 @@ export const register = (email: string, password: string, company_name: string) 
   api.post('/auth/register', { email, password, company_name }).then((r) => r.data)
 export const refreshSession = (refresh_token: string) =>
   api.post('/auth/refresh', { refresh_token }).then((r) => r.data)
+export const verifyEmail = (token: string) =>
+  api.post('/auth/verify-email', { token }).then((r) => r.data)
 
 // Company
 export const getCompany = () => api.get('/company').then((r) => r.data)
