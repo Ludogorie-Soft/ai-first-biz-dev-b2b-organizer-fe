@@ -22,4 +22,8 @@ export const queryKeys = {
     profile: ['company'] as const,
     users: ['company', 'users'] as const,
   },
+  org: {
+    invitations: ['org', 'invitations'] as const,
+    members: ['org', 'members'] as const,
+  },
 }

@@ -151,6 +151,38 @@ export const bg = {
   'settings.role': 'Роля',
   'settings.save': 'Запази промените',
   'settings.saving': 'Запазване...',
+  'settings.joinRequests': 'Заявки за присъединяване',
+  'settings.noJoinRequests': 'Няма чакащи заявки',
+  'settings.approve': 'Одобри',
+  'settings.decline': 'Откажи',
+  'settings.inviteTeamMember': 'Покани член на екипа',
+  'settings.inviteEmail': 'Имейл адрес за покана',
+  'settings.sendInvite': 'Изпрати покана',
+  'settings.sendingInvite': 'Изпращане...',
+  'settings.pendingInvitations': 'Чакащи покани',
+  'settings.noInvitations': 'Няма чакащи покани',
+  'settings.revoke': 'Отмени',
+  'settings.expiresAt': 'Изтича',
+  'settings.remove': 'Премахни',
+  'settings.changeRole': 'Промени роля',
+  'settings.auditLog': 'Журнал на дейностите',
+  'settings.noAuditLog': 'Все още няма дейности',
+  'settings.invitedBy': 'Поканен от',
+
+  // Org / Pending approval
+  'org.pendingTitle': 'Изчаква се одобрение',
+  'org.pendingDesc': 'Заявката ви за присъединяване към организацията е изпратена до собственика. Ще получите имейл след одобрение.',
+  'org.pendingLogout': 'Изход',
+
+  // Accept invite
+  'org.inviteTitle': 'Получихте покана',
+  'org.inviteJoin': 'Присъединете се към',
+  'org.inviteRegisterTitle': 'Създайте акаунт',
+  'org.inviteAlreadyMember': 'Вече имате акаунт? Влезте, за да приемете поканата.',
+  'org.inviteAccept': 'Приеми поканата',
+  'org.inviteAccepting': 'Приемане...',
+  'org.inviteInvalid': 'Тази покана е невалидна или е изтекла.',
+  'org.inviteExpired': 'Поканата е изтекла',
 
   // Common
   'common.save': 'Запази',

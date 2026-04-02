@@ -151,6 +151,38 @@ export const en = {
   'settings.role': 'Role',
   'settings.save': 'Save Changes',
   'settings.saving': 'Saving...',
+  'settings.joinRequests': 'Join Requests',
+  'settings.noJoinRequests': 'No pending join requests',
+  'settings.approve': 'Approve',
+  'settings.decline': 'Decline',
+  'settings.inviteTeamMember': 'Invite Team Member',
+  'settings.inviteEmail': 'Email address to invite',
+  'settings.sendInvite': 'Send Invite',
+  'settings.sendingInvite': 'Sending...',
+  'settings.pendingInvitations': 'Pending Invitations',
+  'settings.noInvitations': 'No pending invitations',
+  'settings.revoke': 'Revoke',
+  'settings.expiresAt': 'Expires',
+  'settings.remove': 'Remove',
+  'settings.changeRole': 'Change Role',
+  'settings.auditLog': 'Audit Log',
+  'settings.noAuditLog': 'No activity yet',
+  'settings.invitedBy': 'Invited by',
+
+  // Org / Pending approval
+  'org.pendingTitle': 'Waiting for approval',
+  'org.pendingDesc': 'Your request to join the organisation has been sent to the owner. You will receive an email once approved.',
+  'org.pendingLogout': 'Sign out',
+
+  // Accept invite
+  'org.inviteTitle': "You've been invited",
+  'org.inviteJoin': 'Join',
+  'org.inviteRegisterTitle': 'Create your account',
+  'org.inviteAlreadyMember': 'Already have an account? Sign in to accept.',
+  'org.inviteAccept': 'Accept Invitation',
+  'org.inviteAccepting': 'Accepting...',
+  'org.inviteInvalid': 'This invitation link is invalid or has expired.',
+  'org.inviteExpired': 'Invitation expired',
 
   // Common
   'common.save': 'Save',

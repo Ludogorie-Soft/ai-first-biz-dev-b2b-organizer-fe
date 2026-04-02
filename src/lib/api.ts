@@ -119,3 +119,16 @@ export const deleteCampaign = (id: string) =>
   api.delete(`/campaigns/${id}`).then((r) => r.data)
 export const getCampaignStats = (id: string) =>
   api.get(`/campaigns/${id}/stats`).then((r) => r.data)
+
+// Org management
+export const getInvitations = () => api.get('/org/invitations').then((r) => r.data)
+export const sendInvitation = (email: string) =>
+  api.post('/org/invitations', { email }).then((r) => r.data)
+export const revokeInvitation = (id: string) =>
+  api.delete(`/org/invitations/${id}`).then((r) => r.data)
+export const checkInvitation = (token: string) =>
+  api.get(`/org/invitations/check?token=${token}`).then((r) => r.data)
+export const acceptInvitationRegister = (token: string, password: string) =>
+  api.post('/org/accept-invite/register', { token, password }).then((r) => r.data)
+export const removeMember = (id: string) =>
+  api.delete(`/org/members/${id}`).then((r) => r.data)

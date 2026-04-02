@@ -57,6 +57,8 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 |---|---|
 | `/login` | Email + password login |
 | `/register` | Create a new company account |
+| `/accept-invite?token=` | Accept team invitation and register |
+| `/verify-email?code=` | Verify email address |
 | `/campaigns` | List all campaigns |
 | `/campaigns/new` | Create a campaign |
 | `/campaigns/[id]` | Campaign detail, stats, pause/resume/delete |
@@ -67,7 +69,7 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 | `/target-groups/new` | Create a target group |
 | `/target-groups/[id]` | View leads, import from Excel |
 | `/mailboxes` | Manage sender mailboxes (IMAP config) |
-| `/settings` | Company profile and team members |
+| `/settings` | Company profile, team invitations, and members |
 
 ---
 
@@ -76,7 +78,7 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 ```
 src/
 ├── app/
-│   ├── (auth)/         # Login, register — no sidebar
+│   ├── (auth)/         # Login, register, accept-invite, verify-email — no sidebar
 │   └── (dashboard)/    # All main pages — fixed sidebar layout
 ├── components/
 │   ├── layout/         # Sidebar
@@ -93,6 +95,18 @@ src/
     ├── authStore.ts    # Token, user, cookie-backed persistence
     └── langStore.ts    # Language toggle (bg/en)
 ```
+
+---
+
+## Team Management
+
+The app uses an **invite** team model:
+
+- Team members are added via email invitations from the Settings page
+- Invitations expire after 24 hours
+- Invited users register directly (no need for existing account)
+- All team members have equal access (no role hierarchy)
+- Any member can invite or remove others
 
 ---
 

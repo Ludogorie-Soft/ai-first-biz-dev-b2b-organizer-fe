@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  if ((pathname === '/login' || pathname === '/register') && isAuthenticated) {
+  if ((pathname === '/login' || pathname === '/register' || pathname === '/pending-approval' || pathname.startsWith('/accept-invite')) && isAuthenticated) {
     return NextResponse.redirect(new URL('/campaigns', request.url))
   }
 
