@@ -26,6 +26,15 @@ export const en = {
   'auth.loggingIn': 'Signing in...',
   'auth.registering': 'Registering...',
   'auth.logout': 'Log out',
+  'auth.checkInbox': 'Check your inbox',
+  'auth.verificationSentTo': 'We sent a verification link to',
+  'auth.linkExpires': 'The link expires in 24 hours.',
+  'auth.alreadyVerified': 'Already verified?',
+  'auth.verifying': 'Verifying…',
+  'auth.emailVerified': 'Email verified!',
+  'auth.accountActive': 'Your account is now active. Sign in to continue.',
+  'auth.verificationFailed': 'Verification failed',
+  'auth.backToRegister': 'Back to Register',
 
   // Campaigns
   'campaigns.title': 'Campaigns',

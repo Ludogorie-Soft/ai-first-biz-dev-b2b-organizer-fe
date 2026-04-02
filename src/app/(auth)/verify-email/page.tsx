@@ -5,9 +5,11 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { verifyEmail } from '@/lib/api'
+import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
 
 function VerifyEmailContent() {
+  const t = useTranslations()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const email = searchParams.get('email')
@@ -21,7 +23,7 @@ function VerifyEmailContent() {
     verifyEmail(token)
       .then(() => setStatus('success'))
       .catch((err: { response?: { data?: { error?: string } } }) => {
-        setErrorMsg(err?.response?.data?.error ?? 'Verification failed.')
+        setErrorMsg(err?.response?.data?.error ?? t['auth.verificationFailed'])
         setStatus('error')
       })
   }, [token])
@@ -32,17 +34,17 @@ function VerifyEmailContent() {
         {status === 'loading' && (
           <>
             <Loader2 className="h-10 w-10 text-indigo-500 mx-auto mb-4 animate-spin" />
-            <h2 className="text-xl font-semibold text-slate-900">Verifying…</h2>
+            <h2 className="text-xl font-semibold text-slate-900">{t['auth.verifying']}</h2>
           </>
         )}
         {status === 'success' && (
           <>
             <CheckCircle className="h-10 w-10 text-green-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Email verified!</h2>
-            <p className="text-sm text-slate-500 mb-6">Your account is now active. Sign in to continue.</p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-1">{t['auth.emailVerified']}</h2>
+            <p className="text-sm text-slate-500 mb-6">{t['auth.accountActive']}</p>
             <Link href="/login">
               <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-full">
-                Sign in
+                {t['auth.signIn']}
               </Button>
             </Link>
           </>
@@ -50,10 +52,10 @@ function VerifyEmailContent() {
         {status === 'error' && (
           <>
             <XCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-slate-900 mb-1">Verification failed</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-1">{t['auth.verificationFailed']}</h2>
             <p className="text-sm text-slate-500 mb-6">{errorMsg}</p>
             <Link href="/register">
-              <Button variant="outline" className="w-full">Back to Register</Button>
+              <Button variant="outline" className="w-full">{t['auth.backToRegister']}</Button>
             </Link>
           </>
         )}
@@ -64,16 +66,16 @@ function VerifyEmailContent() {
   return (
     <div className="text-center">
       <Mail className="h-10 w-10 text-indigo-500 mx-auto mb-4" />
-      <h2 className="text-xl font-semibold text-slate-900 mb-1">Check your inbox</h2>
+      <h2 className="text-xl font-semibold text-slate-900 mb-1">{t['auth.checkInbox']}</h2>
       <p className="text-sm text-slate-500 mb-2">
-        We sent a verification link to{' '}
-        {email ? <span className="font-medium text-slate-700">{email}</span> : 'your email address'}.
+        {t['auth.verificationSentTo']}{' '}
+        {email ? <span className="font-medium text-slate-700">{email}</span> : null}.
       </p>
-      <p className="text-sm text-slate-400">The link expires in 24 hours.</p>
+      <p className="text-sm text-slate-400">{t['auth.linkExpires']}</p>
       <p className="text-sm text-slate-500 text-center mt-8">
-        Already verified?{' '}
+        {t['auth.alreadyVerified']}{' '}
         <Link href="/login" className="text-indigo-600 hover:underline font-medium">
-          Sign in
+          {t['auth.signInLink']}
         </Link>
       </p>
     </div>

@@ -37,8 +37,13 @@ export default function RegisterPage() {
       router.push(`/verify-email?email=${encodeURIComponent(variables.email)}`)
     },
     onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      toast.error(msg ?? t['common.error'])
+      const raw = (err as { response?: { data?: { error?: unknown } } })?.response?.data?.error
+      const msg = typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+        ? (raw[0]?.message ?? t['common.error'])
+        : t['common.error']
+      toast.error(msg)
     },
   })
 

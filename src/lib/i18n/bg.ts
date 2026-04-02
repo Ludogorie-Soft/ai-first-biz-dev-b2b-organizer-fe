@@ -26,6 +26,15 @@ export const bg = {
   'auth.loggingIn': 'Влизане...',
   'auth.registering': 'Регистрация...',
   'auth.logout': 'Изход',
+  'auth.checkInbox': 'Проверете пощата си',
+  'auth.verificationSentTo': 'Изпратихме линк за потвърждение на',
+  'auth.linkExpires': 'Линкът е валиден 24 часа.',
+  'auth.alreadyVerified': 'Вече потвърдихте имейла си?',
+  'auth.verifying': 'Потвърждаване…',
+  'auth.emailVerified': 'Имейлът е потвърден!',
+  'auth.accountActive': 'Акаунтът ви е активен. Влезте, за да продължите.',
+  'auth.verificationFailed': 'Потвърждаването е неуспешно',
+  'auth.backToRegister': 'Обратно към регистрацията',
 
   // Campaigns
   'campaigns.title': 'Кампании',
