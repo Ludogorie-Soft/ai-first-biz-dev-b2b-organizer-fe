@@ -95,6 +95,15 @@ export const importLeads = (file: File, target_group_id: string, column_map?: ob
 }
 export const updateLead = (id: string, data: object) =>
   api.patch(`/leads/${id}`, data).then((r) => r.data)
+export const downloadLeadsTemplate = () =>
+  api.get('/leads/template', { responseType: 'blob' }).then((r) => {
+    const url = URL.createObjectURL(r.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'leads_template.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  })
 
 // Sequences
 export const getSequences = () => api.get('/sequences').then((r) => r.data)

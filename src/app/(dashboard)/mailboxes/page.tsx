@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -222,7 +222,15 @@ export default function MailboxesPage() {
               <Input {...register('imap_user')} className={errors.imap_user ? 'border-red-300' : ''} />
             </div>
             <div className="space-y-1.5">
-              <Label>{t['mailboxes.imapPassword']}</Label>
+              <div className="flex items-center gap-1.5">
+                <Label>{t['mailboxes.imapPassword']}</Label>
+                <div className="relative group">
+                  <Info className="h-3.5 w-3.5 text-slate-400 cursor-help hover:text-slate-600" />
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block w-72 rounded-md bg-slate-800 px-3 py-2 text-xs text-slate-100 shadow-lg">
+                    For Gmail: Google Account → Security → 2-Step Verification → App Passwords. Generate an app password and use it here — not your regular Gmail password.
+                  </div>
+                </div>
+              </div>
               <Input type="password" {...register('imap_password')} className={errors.imap_password ? 'border-red-300' : ''} />
             </div>
             <div className="flex items-center gap-3">

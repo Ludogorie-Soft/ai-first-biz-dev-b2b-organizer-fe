@@ -120,6 +120,7 @@ export const en = {
   'targetGroups.lastNameColumn': 'Last Name Column',
   'targetGroups.preview': 'Preview',
   'targetGroups.importing': 'Importing...',
+  'targetGroups.downloadTemplate': 'Download template',
   'targetGroups.backToGroups': 'Back to groups',
   'targetGroups.creating': 'Creating...',
 

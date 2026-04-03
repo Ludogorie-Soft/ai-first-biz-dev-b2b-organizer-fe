@@ -4,7 +4,7 @@ import { forwardRef, useImperativeHandle, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
 // Splits text on known template variables
-const VAR_SPLIT = /({{(?:first_name|last_name|email|full_name)}})/g
+const VAR_SPLIT = /({{(?:first_name|last_name|email|full_name|company_name|position)}})/g
 
 export interface VariableEditorHandle {
   insertVariable: (variable: string) => void

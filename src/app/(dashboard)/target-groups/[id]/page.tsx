@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Upload, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Upload, ChevronLeft, ChevronRight, RotateCcw, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef } from 'react'
-import { getLeads, previewLeads, importLeads, updateLead } from '@/lib/api'
+import { getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -45,6 +45,8 @@ interface Lead {
   email: string
   first_name?: string
   last_name?: string
+  company_name?: string
+  position?: string
   status: 'active' | 'replied' | 'bounced' | 'unsubscribed' | 'opted_out'
   notes?: string
 }
@@ -182,6 +184,12 @@ export default function TargetGroupDetailPage() {
                     {t['common.lastName']}
                   </TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Company
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Job Title
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     {t['common.status']}
                   </TableHead>
                   <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -196,6 +204,8 @@ export default function TargetGroupDetailPage() {
                     <TableCell className="font-medium text-slate-900 text-sm">{lead.email}</TableCell>
                     <TableCell className="text-slate-500 text-sm">{lead.first_name ?? '—'}</TableCell>
                     <TableCell className="text-slate-500 text-sm">{lead.last_name ?? '—'}</TableCell>
+                    <TableCell className="text-slate-500 text-sm">{lead.company_name ?? '—'}</TableCell>
+                    <TableCell className="text-slate-500 text-sm">{lead.position ?? '—'}</TableCell>
                     <TableCell>
                       <StatusBadge status={lead.status} label={leadStatusLabel(lead.status)} />
                     </TableCell>
@@ -260,6 +270,20 @@ export default function TargetGroupDetailPage() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Download template */}
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs text-slate-500 hover:text-indigo-600"
+                onClick={() => downloadLeadsTemplate().catch(() => toast.error(t['common.error']))}
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                {t['targetGroups.downloadTemplate']}
+              </Button>
+            </div>
+
             {/* File Upload */}
             <div className="space-y-2">
               <Label>{t['targetGroups.selectFile']}</Label>
@@ -276,7 +300,7 @@ export default function TargetGroupDetailPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept=".xlsx,.xls"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -320,6 +344,32 @@ export default function TargetGroupDetailPage() {
                   <div className="space-y-1">
                     <Label className="text-xs">{t['targetGroups.lastNameColumn']}</Label>
                     <Select onValueChange={(v: string | null) => { if (v) setColumnMap((m) => ({ ...m, last_name: v })) }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t['common.select']} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {previewColumns.map((col) => (
+                          <SelectItem key={col} value={col}>{col}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Company Name</Label>
+                    <Select onValueChange={(v: string | null) => { if (v) setColumnMap((m) => ({ ...m, company_name: v })) }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t['common.select']} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {previewColumns.map((col) => (
+                          <SelectItem key={col} value={col}>{col}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Position</Label>
+                    <Select onValueChange={(v: string | null) => { if (v) setColumnMap((m) => ({ ...m, position: v })) }}>
                       <SelectTrigger>
                         <SelectValue placeholder={t['common.select']} />
                       </SelectTrigger>

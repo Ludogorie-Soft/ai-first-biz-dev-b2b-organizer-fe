@@ -28,7 +28,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 
-const VARIABLES = ['{{first_name}}', '{{last_name}}', '{{email}}', '{{full_name}}'] as const
+const VARIABLES = ['{{first_name}}', '{{last_name}}', '{{email}}', '{{full_name}}', '{{company_name}}', '{{position}}'] as const
 
 interface Step {
   id: string

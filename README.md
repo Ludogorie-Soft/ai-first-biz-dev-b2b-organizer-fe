@@ -134,3 +134,30 @@ npm run start
 ```
 
 For Docker deployment, Next.js is configured with `output: 'standalone'` for optimized container images.
+
+---
+
+## Docker — Multi-platform Build & Push to Docker Hub
+
+Required for cross-OS compatibility (e.g. building on Mac M-series and deploying on Linux servers).
+Builds for both `linux/amd64` (Intel/Windows/Linux servers) and `linux/arm64` (Mac M1/M2/M3, AWS Graviton).
+
+**One-time setup — create the multi-platform builder:**
+
+```bash
+docker buildx create --name multibuilder --driver docker-container --use
+```
+
+**Build and push to Docker Hub:**
+
+```bash
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t name/b2b-organizer-frontend:latest \
+  --push \
+  ./ai-first-biz-dev-b2b-organizer-fe
+```
+
+> Run `docker login` first if not already authenticated.
+> The `--push` flag builds and pushes directly to Docker Hub in one step — no separate `docker push` needed.
+> `NEXT_PUBLIC_API_URL` is baked in at build time — set it via `--build-arg NEXT_PUBLIC_API_URL=https://your-api.com/api` if different from the default.

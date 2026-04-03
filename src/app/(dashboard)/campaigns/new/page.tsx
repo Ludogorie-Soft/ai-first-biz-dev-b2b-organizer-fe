@@ -63,6 +63,8 @@ export default function NewCampaignPage() {
   })
 
   const selectedMailboxIds = watch('mailbox_ids')
+  const selectedTargetGroupId = watch('target_group_id')
+  const selectedSequenceIds = watch('sequence_ids')
 
   const mutation = useMutation({
     mutationFn: createCampaign,
@@ -115,9 +117,13 @@ export default function NewCampaignPage() {
 
             <div className="space-y-1.5">
               <Label>{t['campaigns.targetGroup']}</Label>
-              <Select onValueChange={(v: string | null) => { if (v) setValue('target_group_id', v) }}>
+              <Select onValueChange={(v: string | null) => { if (v) setValue('target_group_id', v, { shouldValidate: true }) }}>
                 <SelectTrigger className={errors.target_group_id ? 'border-red-300' : ''}>
-                  <SelectValue placeholder={t['campaigns.selectTargetGroup']} />
+                  <span className={selectedTargetGroupId ? 'text-slate-900' : 'text-slate-400'}>
+                    {selectedTargetGroupId
+                      ? targetGroups.find((tg) => tg.id === selectedTargetGroupId)?.name
+                      : t['campaigns.selectTargetGroup']}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {targetGroups.map((tg) => (
@@ -132,9 +138,13 @@ export default function NewCampaignPage() {
 
             <div className="space-y-1.5">
               <Label>{t['campaigns.sequence']}</Label>
-              <Select onValueChange={(v: string | null) => { if (v) setValue('sequence_ids', [v]) }}>
+              <Select onValueChange={(v: string | null) => { if (v) setValue('sequence_ids', [v], { shouldValidate: true }) }}>
                 <SelectTrigger className={errors.sequence_ids ? 'border-red-300' : ''}>
-                  <SelectValue placeholder={t['campaigns.selectSequence']} />
+                  <span className={selectedSequenceIds?.[0] ? 'text-slate-900' : 'text-slate-400'}>
+                    {selectedSequenceIds?.[0]
+                      ? sequences.find((s) => s.id === selectedSequenceIds[0])?.name
+                      : t['campaigns.selectSequence']}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   {sequences.map((seq) => (

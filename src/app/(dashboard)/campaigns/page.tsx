@@ -26,7 +26,7 @@ interface Campaign {
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft'
   target_group?: { name: string }
-  sequence?: { name: string }
+  campaign_sequences?: { sequence: { name: string } | null }[]
   created_at: string
 }
 
@@ -128,7 +128,7 @@ export default function CampaignsPage() {
                     {campaign.target_group?.name ?? '—'}
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm">
-                    {campaign.sequence?.name ?? '—'}
+                    {campaign.campaign_sequences?.[0]?.sequence?.name ?? '—'}
                   </TableCell>
                   <TableCell className="text-slate-400 text-sm">
                     {new Date(campaign.created_at).toLocaleDateString()}

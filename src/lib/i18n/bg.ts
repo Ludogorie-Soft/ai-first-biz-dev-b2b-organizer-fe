@@ -120,6 +120,7 @@ export const bg = {
   'targetGroups.lastNameColumn': 'Колона Фамилия',
   'targetGroups.preview': 'Преглед',
   'targetGroups.importing': 'Импортиране...',
+  'targetGroups.downloadTemplate': 'Изтегли шаблона',
   'targetGroups.backToGroups': 'Обратно към групите',
   'targetGroups.creating': 'Създаване...',
 
