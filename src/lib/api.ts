@@ -12,6 +12,10 @@ export const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
+  // Prevent the browser from serving cached responses across user sessions
+  config.headers['Cache-Control'] = 'no-cache'
+  config.headers['Pragma'] = 'no-cache'
+
   if (getAuthState) {
     const token = getAuthState().token
     if (token) config.headers.Authorization = `Bearer ${token}`

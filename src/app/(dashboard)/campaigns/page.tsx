@@ -36,7 +36,7 @@ export default function CampaignsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.campaigns.all,
-    queryFn: getCampaigns,
+    queryFn: () => getCampaigns(),
   })
 
   const campaigns: Campaign[] = data?.campaigns || data || []

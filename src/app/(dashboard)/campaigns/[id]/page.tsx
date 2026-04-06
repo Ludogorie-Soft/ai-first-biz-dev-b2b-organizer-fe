@@ -314,10 +314,10 @@ export default function CampaignDetailPage() {
                       {t['common.lastName']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      {t['targetGroups.companyColumn']}
+                      {t['common.company']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      {t['targetGroups.positionColumn']}
+                      {t['common.jobTitle']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       {t['common.status']}

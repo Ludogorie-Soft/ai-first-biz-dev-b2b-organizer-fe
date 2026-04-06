@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { ChevronDown, Check, Plus, Building2, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { getMyCompanies, createCompany } from '@/lib/api'
@@ -16,6 +17,7 @@ interface Company {
 export function CompanySwitcher() {
   const t = useTranslations()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { activeCompanyId, activeCompanyName, setActiveCompany } = useCompanyStore()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -31,12 +33,17 @@ export function CompanySwitcher() {
 
   const validCompanies = companies.filter((c): c is Company => c != null && !!c.name)
 
-  // Set default active company on first load
+  // Set/reset active company when companies load:
+  // - if nothing is stored yet → pick the first
+  // - if stored ID doesn't belong to this user's companies → reset to first
   useEffect(() => {
-    if (!activeCompanyId && validCompanies.length > 0) {
+    if (validCompanies.length === 0) return
+    const isValid = validCompanies.some((c) => c.id === activeCompanyId)
+    if (!activeCompanyId || !isValid) {
       setActiveCompany(validCompanies[0])
     }
-  }, [validCompanies, activeCompanyId, setActiveCompany])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companies])
 
   useEffect(() => {
     if (open) setTimeout(() => searchRef.current?.focus(), 50)
@@ -72,8 +79,8 @@ export function CompanySwitcher() {
     setActiveCompany(company)
     setOpen(false)
     setSearch('')
-    // Invalidate all data so it reloads for the new company
     queryClient.clear()
+    router.push('/campaigns')
   }
 
   const filtered = validCompanies.filter((c) =>
