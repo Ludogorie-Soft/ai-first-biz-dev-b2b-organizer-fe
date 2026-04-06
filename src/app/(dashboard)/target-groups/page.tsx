@@ -26,7 +26,7 @@ interface TargetGroup {
   id: string
   name: string
   description?: string
-  leads?: { count: number }[]
+  campaigns?: { count: number }[]
   created_at: string
 }
 
@@ -105,14 +105,11 @@ export default function TargetGroupsPage() {
                       <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">{group.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-3">
-                      <span className="text-xs text-slate-400">
-                        {group.leads?.[0]?.count ?? 0} {t['targetGroups.leads']}
-                      </span>
                       <Link
                         href={`/target-groups/${group.id}`}
                         className="text-xs text-indigo-600 hover:underline font-medium"
                       >
-                        {t['targetGroups.viewLeads']}
+                        {group.campaigns?.[0]?.count ?? 0} {t['nav.campaigns']}
                       </Link>
                     </div>
                   </div>

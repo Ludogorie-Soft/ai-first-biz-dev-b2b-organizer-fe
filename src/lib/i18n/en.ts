@@ -118,6 +118,8 @@ export const en = {
   'targetGroups.emailColumn': 'Email Column',
   'targetGroups.firstNameColumn': 'First Name Column',
   'targetGroups.lastNameColumn': 'Last Name Column',
+  'targetGroups.companyColumn': 'Company',
+  'targetGroups.positionColumn': 'Position',
   'targetGroups.preview': 'Preview',
   'targetGroups.importing': 'Importing...',
   'targetGroups.downloadTemplate': 'Download template',

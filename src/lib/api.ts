@@ -73,6 +73,7 @@ export const deleteMailbox = (id: string) => api.delete(`/mailboxes/${id}`).then
 
 // Target Groups
 export const getTargetGroups = () => api.get('/target-groups').then((r) => r.data)
+export const getTargetGroup = (id: string) => api.get(`/target-groups/${id}`).then((r) => r.data)
 export const createTargetGroup = (data: object) =>
   api.post('/target-groups', data).then((r) => r.data)
 export const deleteTargetGroup = (id: string) =>
@@ -86,10 +87,10 @@ export const previewLeads = (file: File) => {
   fd.append('file', file)
   return api.post('/leads/preview', fd).then((r) => r.data)
 }
-export const importLeads = (file: File, target_group_id: string, column_map?: object) => {
+export const importLeads = (file: File, campaign_id: string, column_map?: object) => {
   const fd = new FormData()
   fd.append('file', file)
-  fd.append('target_group_id', target_group_id)
+  fd.append('campaign_id', campaign_id)
   if (column_map) fd.append('column_map', JSON.stringify(column_map))
   return api.post('/leads/import', fd).then((r) => r.data)
 }
@@ -119,7 +120,7 @@ export const deleteStep = (sequenceId: string, stepId: string) =>
   api.delete(`/sequences/${sequenceId}/steps/${stepId}`).then((r) => r.data)
 
 // Campaigns
-export const getCampaigns = () => api.get('/campaigns').then((r) => r.data)
+export const getCampaigns = (params?: object) => api.get('/campaigns', { params }).then((r) => r.data)
 export const getCampaign = (id: string) => api.get(`/campaigns/${id}`).then((r) => r.data)
 export const createCampaign = (data: object) => api.post('/campaigns', data).then((r) => r.data)
 export const updateCampaign = (id: string, data: object) =>

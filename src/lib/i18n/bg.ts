@@ -118,6 +118,8 @@ export const bg = {
   'targetGroups.emailColumn': 'Колона Имейл',
   'targetGroups.firstNameColumn': 'Колона Собствено Име',
   'targetGroups.lastNameColumn': 'Колона Фамилия',
+  'targetGroups.companyColumn': 'Компания',
+  'targetGroups.positionColumn': 'Длъжност',
   'targetGroups.preview': 'Преглед',
   'targetGroups.importing': 'Импортиране...',
   'targetGroups.downloadTemplate': 'Изтегли шаблона',
