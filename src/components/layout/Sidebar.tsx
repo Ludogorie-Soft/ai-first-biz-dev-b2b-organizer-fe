@@ -12,11 +12,13 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { useCompanyStore } from '@/stores/companyStore'
 import { queryClient } from '@/app/providers'
 import { useLangStore } from '@/stores/langStore'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { CompanySwitcher } from '@/components/layout/CompanySwitcher'
 
 const navItems = [
   { key: 'nav.campaigns', href: '/campaigns', icon: Megaphone },
@@ -31,10 +33,12 @@ export function Sidebar() {
   const router = useRouter()
   const t = useTranslations()
   const { user, logout } = useAuthStore()
+  const { clearActiveCompany } = useCompanyStore()
   const { lang, setLang } = useLangStore()
 
   function handleLogout() {
     logout()
+    clearActiveCompany()
     queryClient.clear()
     router.push('/login')
   }
@@ -47,6 +51,11 @@ export function Sidebar() {
           BizDev <span className="text-indigo-600">B2B</span>
         </Link>
       </div>
+
+      <Separator />
+
+      {/* Company switcher */}
+      <CompanySwitcher />
 
       <Separator />
 

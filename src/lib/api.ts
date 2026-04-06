@@ -16,6 +16,17 @@ api.interceptors.request.use((config) => {
     const token = getAuthState().token
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
+  // Send active company so backend scopes data correctly
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('active-company')
+      if (stored) {
+        const parsed = JSON.parse(stored) as { state?: { activeCompanyId?: string } }
+        const id = parsed?.state?.activeCompanyId
+        if (id) config.headers['X-Company-Id'] = id
+      }
+    } catch { /* ignore */ }
+  }
   return config
 })
 
@@ -61,8 +72,12 @@ export const refreshSession = (refresh_token: string) =>
 export const verifyEmail = (token: string) =>
   api.post('/auth/verify-email', { token }).then((r) => r.data)
 
-// Company
+// Company (single — current active)
 export const getCompany = () => api.get('/company').then((r) => r.data)
+
+// Companies (all companies the user belongs to)
+export const getMyCompanies = () => api.get('/companies').then((r) => r.data)
+export const createCompany = (name: string) => api.post('/companies', { name }).then((r) => r.data)
 export const updateCompany = (data: object) => api.patch('/company', data).then((r) => r.data)
 export const getCompanyUsers = () => api.get('/company/users').then((r) => r.data)
 

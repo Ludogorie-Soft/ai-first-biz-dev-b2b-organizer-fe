@@ -187,6 +187,12 @@ export const bg = {
   'org.inviteInvalid': 'Тази покана е невалидна или е изтекла.',
   'org.inviteExpired': 'Поканата е изтекла',
 
+  // Companies
+  'companies.createNew': 'Създай нова компания',
+  'companies.namePlaceholder': 'Наименование на компанията',
+  'companies.created': 'Компанията е създадена',
+  'companies.noResults': 'Няма намерени компании',
+
   // Common
   'common.save': 'Запази',
   'common.cancel': 'Отказ',

@@ -187,6 +187,12 @@ export const en = {
   'org.inviteInvalid': 'This invitation link is invalid or has expired.',
   'org.inviteExpired': 'Invitation expired',
 
+  // Companies
+  'companies.createNew': 'Create new company',
+  'companies.namePlaceholder': 'Company name',
+  'companies.created': 'Company created',
+  'companies.noResults': 'No companies found',
+
   // Common
   'common.save': 'Save',
   'common.cancel': 'Cancel',
