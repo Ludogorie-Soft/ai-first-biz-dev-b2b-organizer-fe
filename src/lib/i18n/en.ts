@@ -181,6 +181,7 @@ export const en = {
   // Accept invite
   'org.inviteTitle': "You've been invited",
   'org.inviteJoin': 'Join',
+  'org.inviteExistingUser': 'You already have an account. Enter your password to join',
   'org.inviteRegisterTitle': 'Create your account',
   'org.inviteAlreadyMember': 'Already have an account? Sign in to accept.',
   'org.inviteAccept': 'Accept Invitation',

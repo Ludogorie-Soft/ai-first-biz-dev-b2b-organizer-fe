@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, XCircle, UserPlus } from 'lucide-react'
-import { checkInvitation, acceptInvitationRegister } from '@/lib/api'
+import { checkInvitation, acceptInvitationRegister, acceptInvitationLogin } from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
@@ -16,15 +16,15 @@ import { Label } from '@/components/ui/label'
 import { queryClient } from '@/app/providers'
 import Link from 'next/link'
 
-const registerSchema = z.object({
+const schema = z.object({
   password: z.string().min(8),
 })
-type RegisterForm = z.infer<typeof registerSchema>
+type FormData = z.infer<typeof schema>
 
 interface InvitationInfo {
   email: string
   company_name: string
-  token: string
+  user_exists: boolean
 }
 
 function AcceptInviteContent() {
@@ -37,8 +37,8 @@ function AcceptInviteContent() {
   const [invite, setInvite] = useState<InvitationInfo | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'invalid' | 'accepting'>(() => token ? 'loading' : 'invalid')
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
   })
 
   useEffect(() => {
@@ -48,11 +48,12 @@ function AcceptInviteContent() {
       .catch(() => setStatus('invalid'))
   }, [token])
 
-  async function handleRegisterAndAccept(data: RegisterForm) {
+  async function handleAccept(data: FormData) {
     if (!invite) return
     setStatus('accepting')
     try {
-      const result = await acceptInvitationRegister(token, data.password)
+      const fn = invite.user_exists ? acceptInvitationLogin : acceptInvitationRegister
+      const result = await fn(token, data.password)
       queryClient.clear()
       setAuth(result.access_token, result.refresh_token, result.user)
       router.push('/campaigns')
@@ -91,10 +92,13 @@ function AcceptInviteContent() {
       </div>
       <h2 className="text-xl font-semibold text-slate-900 text-center mb-1">{t['org.inviteTitle']}</h2>
       <p className="text-sm text-slate-500 text-center mb-6">
-        {t['org.inviteJoin']} <span className="font-medium text-slate-700">{invite?.company_name}</span>
+        {invite?.user_exists
+          ? <>{t['org.inviteExistingUser']} <span className="font-medium text-slate-700">{invite.company_name}</span></>
+          : <>{t['org.inviteJoin']} <span className="font-medium text-slate-700">{invite?.company_name}</span></>
+        }
       </p>
 
-      <form onSubmit={handleSubmit(handleRegisterAndAccept)} className="space-y-4">
+      <form onSubmit={handleSubmit(handleAccept)} className="space-y-4">
         <div className="space-y-1.5">
           <Label>{t['auth.email']}</Label>
           <Input value={invite?.email ?? ''} disabled />

@@ -159,5 +159,7 @@ export const checkInvitation = (token: string) =>
   api.get(`/org/invitations/check?token=${token}`).then((r) => r.data)
 export const acceptInvitationRegister = (token: string, password: string) =>
   api.post('/org/accept-invite/register', { token, password }).then((r) => r.data)
+export const acceptInvitationLogin = (token: string, password: string) =>
+  api.post('/org/accept-invite/login', { token, password }).then((r) => r.data)
 export const removeMember = (id: string) =>
   api.delete(`/org/members/${id}`).then((r) => r.data)

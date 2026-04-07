@@ -181,6 +181,7 @@ export const bg = {
   // Accept invite
   'org.inviteTitle': 'Получихте покана',
   'org.inviteJoin': 'Присъединете се към',
+  'org.inviteExistingUser': 'Вече имате акаунт. Въведете паролата си, за да се присъедините към',
   'org.inviteRegisterTitle': 'Създайте акаунт',
   'org.inviteAlreadyMember': 'Вече имате акаунт? Влезте, за да приемете поканата.',
   'org.inviteAccept': 'Приеми поканата',
