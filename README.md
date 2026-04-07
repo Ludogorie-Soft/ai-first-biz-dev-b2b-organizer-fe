@@ -57,7 +57,7 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 |---|---|
 | `/login` | Email + password login |
 | `/register` | Create a new company account |
-| `/accept-invite?token=` | Accept team invitation and register |
+| `/accept-invite?token=` | Accept team invitation — register new account or join with existing password |
 | `/verify-email?code=` | Verify email address |
 | `/campaigns` | List all campaigns |
 | `/campaigns/new` | Create a campaign |
@@ -93,6 +93,7 @@ src/
 ├── proxy.ts            # Next.js 16 route protection middleware
 └── stores/
     ├── authStore.ts    # Token, user, cookie-backed persistence
+    ├── companyStore.ts # Active company selection, localStorage-backed
     └── langStore.ts    # Language toggle (bg/en)
 ```
 
@@ -100,13 +101,15 @@ src/
 
 ## Team Management
 
-The app uses an **invite** team model:
+The app uses an **invite** team model with multi-company support:
 
+- A user can belong to multiple companies — switch between them via the company dropdown in the sidebar
 - Team members are added via email invitations from the Settings page
 - Invitations expire after 24 hours
-- Invited users register directly (no need for existing account)
+- **New users** register directly via the invite link
+- **Existing users** enter their existing password to join the new company; their original company remains accessible
+- Removing a member removes them from the current company only — their account is not deleted
 - All team members have equal access (no role hierarchy)
-- Any member can invite or remove others
 
 ---
 
@@ -152,7 +155,8 @@ docker buildx create --name multibuilder --driver docker-container --use
 
 ```bash
 docker buildx build \
-  --platform linux/amd64,linux/arm64 \
+  --platform linux/amd64 \
+  --build-arg NEXT_PUBLIC_API_URL=https://your-api.com/api \
   -t name/b2b-organizer-frontend:latest \
   --push \
   ./ai-first-biz-dev-b2b-organizer-fe
@@ -160,4 +164,5 @@ docker buildx build \
 
 > Run `docker login` first if not already authenticated.
 > The `--push` flag builds and pushes directly to Docker Hub in one step — no separate `docker push` needed.
-> `NEXT_PUBLIC_API_URL` is baked in at build time — set it via `--build-arg NEXT_PUBLIC_API_URL=https://your-api.com/api` if different from the default.
+> `NEXT_PUBLIC_API_URL` is baked in at build time — always pass it via `--build-arg`.
+> Use `--platform linux/amd64` only. Building `linux/arm64` simultaneously via QEMU can cause a segfault during Next.js static page generation on Apple Silicon.
