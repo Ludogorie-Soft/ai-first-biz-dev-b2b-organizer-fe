@@ -123,6 +123,7 @@ export const bg = {
   'targetGroups.preview': 'Преглед',
   'targetGroups.importing': 'Импортиране...',
   'targetGroups.downloadTemplate': 'Изтегли шаблона',
+  'targetGroups.useTemplate': 'Използвах шаблона',
   'targetGroups.backToGroups': 'Обратно към групите',
   'targetGroups.creating': 'Създаване...',
 

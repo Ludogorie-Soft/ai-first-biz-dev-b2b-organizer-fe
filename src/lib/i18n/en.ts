@@ -123,6 +123,7 @@ export const en = {
   'targetGroups.preview': 'Preview',
   'targetGroups.importing': 'Importing...',
   'targetGroups.downloadTemplate': 'Download template',
+  'targetGroups.useTemplate': 'Used template mapping',
   'targetGroups.backToGroups': 'Back to groups',
   'targetGroups.creating': 'Creating...',
 
