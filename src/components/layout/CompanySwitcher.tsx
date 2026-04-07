@@ -29,6 +29,7 @@ export function CompanySwitcher() {
   const { data: companies = [] } = useQuery<Company[]>({
     queryKey: ['companies'],
     queryFn: getMyCompanies,
+    refetchOnMount: 'always',
   })
 
   const validCompanies = companies.filter((c): c is Company => c != null && !!c.name)
