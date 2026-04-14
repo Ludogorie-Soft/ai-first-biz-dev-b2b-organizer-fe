@@ -25,13 +25,11 @@ npm install
 
 ### 2. Configure environment
 
-Create a `.env.local` file:
-
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
+cp .env.example .env.local
 ```
 
-Point this at wherever the `-api` server is running.
+Set `NEXT_PUBLIC_API_URL` to wherever the `-api` server is running (see [Environment Variables](#environment-variables) below).
 
 ### 3. Start development
 
@@ -47,7 +45,7 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 
 | Variable | Required | Description |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | Always | Base URL of the `-api` server |
+| `NEXT_PUBLIC_API_URL` | Always | Base URL of the `-api` server, e.g. `http://localhost:3000/api`. **Baked in at build time** — always pass via `--build-arg` in Docker. |
 
 ---
 
@@ -68,8 +66,10 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 | `/target-groups` | List target groups with lead counts |
 | `/target-groups/new` | Create a target group |
 | `/target-groups/[id]` | View leads, import from Excel |
-| `/mailboxes` | Manage sender mailboxes (IMAP config) |
+| `/mailboxes` | Manage sender mailboxes (IMAP config) — shows SES verification status |
 | `/settings` | Company profile, team invitations, and members |
+| `/admin` | **global_admin only** — list mailboxes awaiting SES approval, approve them |
+| `/unsubscribe?token=` | Public page — processes one-click unsubscribe links from emails |
 
 ---
 
@@ -79,7 +79,8 @@ Opens on `http://localhost:3001` (or `3000` if the API is on a different port).
 src/
 ├── app/
 │   ├── (auth)/         # Login, register, accept-invite, verify-email — no sidebar
-│   └── (dashboard)/    # All main pages — fixed sidebar layout
+│   ├── (dashboard)/    # All main pages — fixed sidebar layout
+│   └── unsubscribe/    # Public unsubscribe page — no auth, no sidebar
 ├── components/
 │   ├── layout/         # Sidebar
 │   ├── shared/         # PageHeader, EmptyState, StatusBadge, etc.
@@ -109,7 +110,8 @@ The app uses an **invite** team model with multi-company support:
 - **New users** register directly via the invite link
 - **Existing users** enter their existing password to join the new company; their original company remains accessible
 - Removing a member removes them from the current company only — their account is not deleted
-- All team members have equal access (no role hierarchy)
+- All team members have equal access within a company
+- Users with `global_admin` role see an extra **Admin** section in the sidebar for platform-level mailbox approvals
 
 ---
 
@@ -155,14 +157,15 @@ docker buildx create --name multibuilder --driver docker-container --use
 
 ```bash
 docker buildx build \
-  --platform linux/amd64 \
-  --build-arg NEXT_PUBLIC_API_URL=https://your-api.com/api \
-  -t name/b2b-organizer-frontend:latest \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg NEXT_PUBLIC_API_URL=http://35.241.212.201:3000/api \
+  -t ludogoriesoft/b2b-organizer-frontend:latest \
   --push \
   ./ai-first-biz-dev-b2b-organizer-fe
 ```
 
 > Run `docker login` first if not already authenticated.
 > The `--push` flag builds and pushes directly to Docker Hub in one step — no separate `docker push` needed.
-> `NEXT_PUBLIC_API_URL` is baked in at build time — always pass it via `--build-arg`.
-> Use `--platform linux/amd64` only. Building `linux/arm64` simultaneously via QEMU can cause a segfault during Next.js static page generation on Apple Silicon.
+> `NEXT_PUBLIC_API_URL` is baked in at build time — always pass it via `--build-arg`. It cannot be changed via `.env` after the image is built.
+> Use `--platform linux/amd64` only if the `linux/arm64` QEMU build causes a segfault during Next.js static page generation on Apple Silicon.
+

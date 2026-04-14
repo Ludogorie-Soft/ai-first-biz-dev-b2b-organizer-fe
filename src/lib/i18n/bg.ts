@@ -128,6 +128,14 @@ export const bg = {
   'targetGroups.backToGroups': 'Обратно към групите',
   'targetGroups.creating': 'Създаване...',
 
+  // Unsubscribe
+  'unsubscribe.processing': 'Отписване…',
+  'unsubscribe.success': 'Успешно отписване',
+  'unsubscribe.successDesc': 'Имейл адресът ви е премахнат от списъка. Няма да получавате повече имейли от тази компания.',
+  'unsubscribe.error': 'Невалиден или изтекъл линк',
+  'unsubscribe.errorDesc': 'Линкът за отписване е невалиден. Ако смятате, че е грешка, моля свържете се с изпращача.',
+  'unsubscribe.alreadyDone': 'Вече сте отписани',
+
   // Admin panel
   'admin.title': 'Администратор',
   'admin.pendingMailboxes': 'Пощенски кутии за одобрение',

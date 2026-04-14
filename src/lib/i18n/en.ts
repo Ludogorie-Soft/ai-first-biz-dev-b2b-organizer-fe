@@ -128,6 +128,14 @@ export const en = {
   'targetGroups.backToGroups': 'Back to groups',
   'targetGroups.creating': 'Creating...',
 
+  // Unsubscribe
+  'unsubscribe.processing': 'Unsubscribing…',
+  'unsubscribe.success': 'You have been unsubscribed',
+  'unsubscribe.successDesc': 'Your email address has been removed from the list. You will not receive any more emails from this company.',
+  'unsubscribe.error': 'Invalid or expired link',
+  'unsubscribe.errorDesc': 'This unsubscribe link is not valid. If you think this is a mistake, please contact the sender.',
+  'unsubscribe.alreadyDone': 'Already unsubscribed',
+
   // Admin panel
   'admin.title': 'Admin',
   'admin.pendingMailboxes': 'Mailboxes Pending Approval',

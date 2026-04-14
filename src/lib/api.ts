@@ -149,6 +149,10 @@ export const deleteCampaign = (id: string) =>
 export const getCampaignStats = (id: string) =>
   api.get(`/campaigns/${id}/stats`).then((r) => r.data)
 
+// Unsubscribe (public — no auth required)
+export const unsubscribe = (token: string) =>
+  api.post('/unsubscribe', { token }).then((r) => r.data)
+
 // Admin (global_admin only)
 export const getAdminPendingMailboxes = () => api.get('/admin/mailboxes').then((r) => r.data)
 export const approveMailbox = (id: string) =>
