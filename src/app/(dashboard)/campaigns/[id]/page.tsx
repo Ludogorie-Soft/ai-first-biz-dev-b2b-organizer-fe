@@ -42,7 +42,7 @@ import {
 interface Campaign {
   id: string
   name: string
-  status: 'active' | 'paused' | 'completed' | 'draft'
+  status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
 }
 
 interface CampaignStats {
@@ -188,11 +188,12 @@ export default function CampaignDetailPage() {
   }
 
   const statusLabel = (status: Campaign['status']) => {
-    const map = {
+    const map: Record<Campaign['status'], string> = {
       active: t['campaigns.active'],
       paused: t['campaigns.paused'],
       completed: t['campaigns.completed'],
       draft: t['campaigns.draft'],
+      pending_mailbox_approval: t['campaigns.pendingMailboxApproval'],
     }
     return map[status] ?? status
   }

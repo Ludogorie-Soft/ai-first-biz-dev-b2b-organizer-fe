@@ -36,6 +36,7 @@ import {
 interface Mailbox {
   id: string
   email: string
+  ses_status: 'pending' | 'active'
   is_paused: boolean
   warmup_started_at: string
   created_at: string
@@ -157,10 +158,14 @@ export default function MailboxesPage() {
                 <TableRow key={mb.id}>
                   <TableCell className="font-medium text-slate-900 text-sm">{mb.email}</TableCell>
                   <TableCell>
-                    <StatusBadge
-                      status={mb.is_paused ? 'paused' : 'active'}
-                      label={mb.is_paused ? t['mailboxes.paused'] : t['mailboxes.active']}
-                    />
+                    {mb.ses_status === 'pending' ? (
+                      <StatusBadge status="draft" label={t['mailboxes.sesPending']} />
+                    ) : (
+                      <StatusBadge
+                        status={mb.is_paused ? 'paused' : 'active'}
+                        label={mb.is_paused ? t['mailboxes.paused'] : t['mailboxes.active']}
+                      />
+                    )}
                   </TableCell>
                   <TableCell className="text-slate-400 text-sm">
                     {new Date(mb.created_at).toLocaleDateString()}

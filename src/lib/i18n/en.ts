@@ -44,6 +44,7 @@ export const en = {
   'campaigns.paused': 'Paused',
   'campaigns.completed': 'Completed',
   'campaigns.draft': 'Draft',
+  'campaigns.pendingMailboxApproval': 'Pending mailbox approval',
   'campaigns.name': 'Name',
   'campaigns.description': 'Description',
   'campaigns.targetGroup': 'Target Group',
@@ -127,6 +128,19 @@ export const en = {
   'targetGroups.backToGroups': 'Back to groups',
   'targetGroups.creating': 'Creating...',
 
+  // Admin panel
+  'admin.title': 'Admin',
+  'admin.pendingMailboxes': 'Mailboxes Pending Approval',
+  'admin.noPendingMailboxes': 'No pending mailboxes',
+  'admin.noPendingMailboxesDesc': 'All registered mailboxes have been approved.',
+  'admin.approve': 'Approve in SES',
+  'admin.approving': 'Approving...',
+  'admin.company': 'Company',
+  'admin.pendingCampaigns': 'Pending campaigns',
+  'admin.approvedSuccess': 'Mailbox approved',
+  'admin.campaignsActivated': 'campaigns activated',
+  'admin.sesNotVerified': 'Email is not yet verified in SES. Ask the mailbox owner to click the verification link sent by AWS.',
+
   // Mailboxes
   'mailboxes.title': 'Mailboxes',
   'mailboxes.add': 'Add Mailbox',
@@ -141,6 +155,7 @@ export const en = {
   'mailboxes.noMailboxesDesc': 'Add a mailbox to start sending emails.',
   'mailboxes.paused': 'Paused',
   'mailboxes.active': 'Active',
+  'mailboxes.sesPending': 'Awaiting SES verification',
   'mailboxes.status': 'Status',
   'mailboxes.createdAt': 'Created',
   'mailboxes.adding': 'Adding...',

@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard,
   Megaphone,
   ListOrdered,
   Users,
   Mail,
   Settings,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useCompanyStore } from '@/stores/companyStore'
@@ -18,6 +18,7 @@ import { useLangStore } from '@/stores/langStore'
 import { useTranslations } from '@/hooks/useTranslations'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+
 import { CompanySwitcher } from '@/components/layout/CompanySwitcher'
 
 const navItems = [
@@ -26,6 +27,10 @@ const navItems = [
   { key: 'nav.targetGroups', href: '/target-groups', icon: Users },
   { key: 'nav.mailboxes', href: '/mailboxes', icon: Mail },
   { key: 'nav.settings', href: '/settings', icon: Settings },
+] as const
+
+const adminNavItems = [
+  { key: 'admin.title', href: '/admin', icon: ShieldCheck },
 ] as const
 
 export function Sidebar() {
@@ -78,6 +83,29 @@ export function Sidebar() {
             </Link>
           )
         })}
+
+        {user?.role === 'global_admin' && (
+          <>
+            <Separator className="my-2" />
+            {adminNavItems.map(({ key, href, icon: Icon }) => {
+              const isActive = pathname === href || pathname.startsWith(href + '/')
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? 'bg-slate-100 text-indigo-600 font-medium'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {t[key]}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       {/* Bottom section */}

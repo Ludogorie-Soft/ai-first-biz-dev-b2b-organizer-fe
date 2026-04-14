@@ -7,6 +7,7 @@ import { refreshSession } from '@/lib/api'
 interface User {
   id: string
   email: string
+  role?: 'owner' | 'admin' | 'member' | 'global_admin'
 }
 
 interface AuthState {

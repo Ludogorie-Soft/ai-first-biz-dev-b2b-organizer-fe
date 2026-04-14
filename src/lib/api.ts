@@ -149,6 +149,11 @@ export const deleteCampaign = (id: string) =>
 export const getCampaignStats = (id: string) =>
   api.get(`/campaigns/${id}/stats`).then((r) => r.data)
 
+// Admin (global_admin only)
+export const getAdminPendingMailboxes = () => api.get('/admin/mailboxes').then((r) => r.data)
+export const approveMailbox = (id: string) =>
+  api.patch(`/admin/mailboxes/${id}/approve`).then((r) => r.data)
+
 // Org management
 export const getInvitations = () => api.get('/org/invitations').then((r) => r.data)
 export const sendInvitation = (email: string) =>

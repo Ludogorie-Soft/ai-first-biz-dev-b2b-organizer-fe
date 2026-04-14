@@ -44,6 +44,7 @@ export const bg = {
   'campaigns.paused': 'Пауза',
   'campaigns.completed': 'Завършена',
   'campaigns.draft': 'Чернова',
+  'campaigns.pendingMailboxApproval': 'Очаква потвърждение на пощенска кутия',
   'campaigns.name': 'Наименование',
   'campaigns.description': 'Описание',
   'campaigns.targetGroup': 'Целева група',
@@ -127,6 +128,19 @@ export const bg = {
   'targetGroups.backToGroups': 'Обратно към групите',
   'targetGroups.creating': 'Създаване...',
 
+  // Admin panel
+  'admin.title': 'Администратор',
+  'admin.pendingMailboxes': 'Пощенски кутии за одобрение',
+  'admin.noPendingMailboxes': 'Няма чакащи пощенски кутии',
+  'admin.noPendingMailboxesDesc': 'Всички регистрирани пощенски кутии са одобрени.',
+  'admin.approve': 'Одобри в SES',
+  'admin.approving': 'Одобряване...',
+  'admin.company': 'Компания',
+  'admin.pendingCampaigns': 'Чакащи кампании',
+  'admin.approvedSuccess': 'Пощенската кутия е одобрена',
+  'admin.campaignsActivated': 'кампании са активирани',
+  'admin.sesNotVerified': 'Имейлът все още не е потвърден в SES. Помолете собственика на пощенската кутия да кликне на линка за потвърждение, изпратен от AWS.',
+
   // Mailboxes
   'mailboxes.title': 'Пощенски кутии',
   'mailboxes.add': 'Добави кутия',
@@ -141,6 +155,7 @@ export const bg = {
   'mailboxes.noMailboxesDesc': 'Добавете пощенска кутия за изпращане на имейли.',
   'mailboxes.paused': 'Пауза',
   'mailboxes.active': 'Активна',
+  'mailboxes.sesPending': 'Очаква SES потвърждение',
   'mailboxes.status': 'Статус',
   'mailboxes.createdAt': 'Създадена',
   'mailboxes.adding': 'Добавяне...',
