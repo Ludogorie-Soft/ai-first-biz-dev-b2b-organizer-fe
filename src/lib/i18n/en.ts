@@ -185,6 +185,7 @@ export const en = {
   'mailboxes.weeklyLimit': 'Weekly Limit',
   'mailboxes.warmingUp': 'Warming up',
   'mailboxes.warmingUpTooltip': 'This mailbox is warming up. The current limit is lower than the configured maximum to build sender reputation.',
+  'mailboxes.healthCheckNotice': 'Check mailbox email health before starting campaigns to protect deliverability.',
 
   // Settings
   'settings.companyProfile': 'Company Profile',

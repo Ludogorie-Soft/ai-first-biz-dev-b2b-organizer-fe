@@ -120,6 +120,36 @@ export default function MailboxesPage() {
         }
       />
 
+      <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <p className="text-sm text-slate-700">{t['mailboxes.healthCheckNotice']}</p>
+        <div className="mt-2 flex flex-wrap gap-3 text-sm">
+          <a
+            href="https://www.mail-tester.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            Mail-Tester
+          </a>
+          <a
+            href="https://www.mailgenius.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            MailGenius
+          </a>
+          <a
+            href="https://mxtoolbox.com/emailhealth"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            MXToolbox Email Health
+          </a>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
