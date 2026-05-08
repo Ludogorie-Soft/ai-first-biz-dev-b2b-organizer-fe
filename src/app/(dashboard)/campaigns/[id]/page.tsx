@@ -61,6 +61,7 @@ interface CampaignStats {
 interface Lead {
   id: string
   email: string
+  office_email?: string | null
   first_name?: string
   last_name?: string
   company_name?: string
@@ -74,6 +75,7 @@ const PAGE_SIZE = 20
 // Column names used in the downloadable template
 const TEMPLATE_COLUMN_MAP: Record<string, string> = {
   email: 'Email',
+  office_email: 'Office Email',
   first_name: 'First Name',
   last_name: 'Last Name',
   company_name: 'Company',
@@ -328,6 +330,9 @@ export default function CampaignDetailPage() {
                       {t['common.email']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['common.officeEmail']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       {t['common.firstName']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -352,6 +357,7 @@ export default function CampaignDetailPage() {
                   {leads.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium text-slate-900 text-sm">{lead.email}</TableCell>
+                      <TableCell className="text-slate-500 text-sm">{lead.office_email ?? '—'}</TableCell>
                       <TableCell className="text-slate-500 text-sm">{lead.first_name ?? '—'}</TableCell>
                       <TableCell className="text-slate-500 text-sm">{lead.last_name ?? '—'}</TableCell>
                       <TableCell className="text-slate-500 text-sm">{lead.company_name ?? '—'}</TableCell>
@@ -524,6 +530,7 @@ export default function CampaignDetailPage() {
                 <div className="space-y-2">
                   {[
                     { field: 'email', label: `${t['targetGroups.emailColumn']} *` },
+                    { field: 'office_email', label: t['targetGroups.officeEmailColumn'] },
                     { field: 'first_name', label: t['targetGroups.firstNameColumn'] },
                     { field: 'last_name', label: t['targetGroups.lastNameColumn'] },
                     { field: 'company_name', label: t['targetGroups.companyColumn'] },
