@@ -369,7 +369,7 @@ export default function CampaignDetailPage() {
                         {lead.notes ?? '—'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {lead.status !== 'active' && (
+                        {lead.status !== 'active' && lead.status !== 'unsubscribed' && (
                           <Button
                             variant="ghost"
                             size="sm"
