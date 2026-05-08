@@ -157,6 +157,11 @@ export const unsubscribe = (token: string) =>
 export const getAdminPendingMailboxes = () => api.get('/admin/mailboxes').then((r) => r.data)
 export const approveMailbox = (id: string) =>
   api.patch(`/admin/mailboxes/${id}/approve`).then((r) => r.data)
+export const getAdminMailboxLimits = () => api.get('/admin/mailboxes/limits').then((r) => r.data)
+export const updateMailboxEmailLimits = (
+  id: string,
+  limits: { daily_email_limit: number; weekly_email_limit: number }
+) => api.patch(`/admin/mailboxes/${id}/limits`, limits).then((r) => r.data)
 
 // Org management
 export const getInvitations = () => api.get('/org/invitations').then((r) => r.data)

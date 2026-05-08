@@ -139,6 +139,7 @@ export const bg = {
 
   // Admin panel
   'admin.title': 'Администратор',
+  'admin.pendingMailboxesTab': 'Чакащи пощенски кутии',
   'admin.pendingMailboxes': 'Пощенски кутии за одобрение',
   'admin.noPendingMailboxes': 'Няма чакащи пощенски кутии',
   'admin.noPendingMailboxesDesc': 'Всички регистрирани пощенски кутии са одобрени.',
@@ -149,6 +150,18 @@ export const bg = {
   'admin.approvedSuccess': 'Пощенската кутия е одобрена',
   'admin.campaignsActivated': 'кампании са активирани',
   'admin.sesNotVerified': 'Имейлът все още не е потвърден в SES. Помолете собственика на пощенската кутия да кликне на линка за потвърждение, изпратен от AWS.',
+  'admin.emailLimitsTab': 'Лимити на имейли',
+  'admin.emailLimitsTitle': 'Лимити за изпращане на имейли',
+  'admin.dailyLimit': 'Дневен лимит',
+  'admin.weeklyLimit': 'Седмичен лимит',
+  'admin.sentToday': 'Изпратени днес',
+  'admin.sentThisWeek': 'Изпратени тази седмица',
+  'admin.editLimits': 'Редактирай лимити',
+  'admin.saveLimits': 'Запази лимити',
+  'admin.savingLimits': 'Запазване...',
+  'admin.limitsUpdated': 'Лимитите са обновени успешно',
+  'admin.weeklyMustBeGteDaily': 'Седмичният лимит трябва да е ≥ дневния лимит',
+  'admin.limitsLoadError': 'Неуспешно зареждане на лимитите. Уверете се, че миграцията на базата данни е приложена.',
 
   // Mailboxes
   'mailboxes.title': 'Пощенски кутии',
@@ -168,6 +181,10 @@ export const bg = {
   'mailboxes.status': 'Статус',
   'mailboxes.createdAt': 'Създадена',
   'mailboxes.adding': 'Добавяне...',
+  'mailboxes.dailyLimit': 'Дневен лимит',
+  'mailboxes.weeklyLimit': 'Седмичен лимит',
+  'mailboxes.warmingUp': 'Загрява',
+  'mailboxes.warmingUpTooltip': 'Тази пощенска кутия е в процес на загряване. Текущият лимит е по-нисък от конфигурирания максимум за изграждане на репутация на изпращача.',
 
   // Settings
   'settings.companyProfile': 'Профил на компанията',

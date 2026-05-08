@@ -1,4 +1,8 @@
 export const queryKeys = {
+  admin: {
+    pendingMailboxes: ['admin', 'pending-mailboxes'] as const,
+    mailboxLimits: ['admin', 'mailbox-limits'] as const,
+  },
   campaigns: {
     all: ['campaigns'] as const,
     single: (id: string) => ['campaigns', id] as const,

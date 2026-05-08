@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Info } from 'lucide-react'
+import { Plus, Trash2, Info, Flame } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -40,6 +40,10 @@ interface Mailbox {
   is_paused: boolean
   warmup_started_at: string
   created_at: string
+  daily_email_limit: number
+  weekly_email_limit: number
+  effective_daily_limit: number
+  is_warming_up: boolean
 }
 
 const schema = z.object({
@@ -148,6 +152,12 @@ export default function MailboxesPage() {
                   {t['mailboxes.status']}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {t['mailboxes.dailyLimit']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {t['mailboxes.weeklyLimit']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   {t['mailboxes.createdAt']}
                 </TableHead>
                 <TableHead />
@@ -166,6 +176,28 @@ export default function MailboxesPage() {
                         label={mb.is_paused ? t['mailboxes.paused'] : t['mailboxes.active']}
                       />
                     )}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-900 font-medium">
+                        {mb.effective_daily_limit ?? mb.daily_email_limit}
+                      </span>
+                      {mb.daily_email_limit && mb.effective_daily_limit !== mb.daily_email_limit && (
+                        <span className="text-slate-400 text-xs">/ {mb.daily_email_limit}</span>
+                      )}
+                      {mb.is_warming_up && (
+                        <span
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"
+                          title={t['mailboxes.warmingUpTooltip']}
+                        >
+                          <Flame className="h-3 w-3" />
+                          {t['mailboxes.warmingUp']}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-slate-900 text-sm font-medium">
+                    {mb.weekly_email_limit ?? '—'}
                   </TableCell>
                   <TableCell className="text-slate-400 text-sm">
                     {new Date(mb.created_at).toLocaleDateString()}

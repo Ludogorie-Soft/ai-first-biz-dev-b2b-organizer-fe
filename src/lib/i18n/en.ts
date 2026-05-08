@@ -139,6 +139,7 @@ export const en = {
 
   // Admin panel
   'admin.title': 'Admin',
+  'admin.pendingMailboxesTab': 'Pending Mailboxes',
   'admin.pendingMailboxes': 'Mailboxes Pending Approval',
   'admin.noPendingMailboxes': 'No pending mailboxes',
   'admin.noPendingMailboxesDesc': 'All registered mailboxes have been approved.',
@@ -149,6 +150,18 @@ export const en = {
   'admin.approvedSuccess': 'Mailbox approved',
   'admin.campaignsActivated': 'campaigns activated',
   'admin.sesNotVerified': 'Email is not yet verified in SES. Ask the mailbox owner to click the verification link sent by AWS.',
+  'admin.emailLimitsTab': 'Email Limits',
+  'admin.emailLimitsTitle': 'Email Send Limits',
+  'admin.dailyLimit': 'Daily Limit',
+  'admin.weeklyLimit': 'Weekly Limit',
+  'admin.sentToday': 'Sent Today',
+  'admin.sentThisWeek': 'Sent This Week',
+  'admin.editLimits': 'Edit Limits',
+  'admin.saveLimits': 'Save Limits',
+  'admin.savingLimits': 'Saving...',
+  'admin.limitsUpdated': 'Limits updated successfully',
+  'admin.weeklyMustBeGteDaily': 'Weekly limit must be ≥ daily limit',
+  'admin.limitsLoadError': 'Could not load email limits. Make sure the database migration has been applied.',
 
   // Mailboxes
   'mailboxes.title': 'Mailboxes',
@@ -168,6 +181,10 @@ export const en = {
   'mailboxes.status': 'Status',
   'mailboxes.createdAt': 'Created',
   'mailboxes.adding': 'Adding...',
+  'mailboxes.dailyLimit': 'Daily Limit',
+  'mailboxes.weeklyLimit': 'Weekly Limit',
+  'mailboxes.warmingUp': 'Warming up',
+  'mailboxes.warmingUpTooltip': 'This mailbox is warming up. The current limit is lower than the configured maximum to build sender reputation.',
 
   // Settings
   'settings.companyProfile': 'Company Profile',
