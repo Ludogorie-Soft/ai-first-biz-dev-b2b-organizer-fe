@@ -72,6 +72,12 @@ export const en = {
   'campaigns.count': 'Count',
   'campaigns.creating': 'Creating...',
   'campaigns.backToCampaigns': 'Back to campaigns',
+  'campaigns.sequenceProgress': 'Sequence progress',
+  'campaigns.stepsExecutedDetail': '{executed} of {total} steps sent',
+  'campaigns.contacts': 'Contacts',
+  'campaigns.progress': 'Progress',
+  'campaigns.totalReplies': 'Replies',
+  'campaigns.positiveRepliesColumn': 'Positive replies',
 
   // Sequences
   'sequences.title': 'Sequences',

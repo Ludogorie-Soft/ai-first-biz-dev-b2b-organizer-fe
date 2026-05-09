@@ -3,16 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download } from 'lucide-react'
+import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download, ListOrdered } from 'lucide-react'
 import { toast } from 'sonner'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageLoader } from '@/components/shared/LoadingSpinner'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Label } from '@/components/ui/label'
@@ -43,6 +44,7 @@ interface Campaign {
   id: string
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
+  campaign_sequences?: { sequence_id: string }[]
 }
 
 interface CampaignStats {
@@ -56,6 +58,9 @@ interface CampaignStats {
     neutral: number
     out_of_office: number
   }
+  steps_total: number
+  steps_executed: number
+  campaign_status: Campaign['status']
 }
 
 interface Lead {
@@ -110,6 +115,15 @@ export default function CampaignDetailPage() {
     queryFn: () => getCampaignStats(id),
   })
 
+  useEffect(() => {
+    if (!stats?.campaign_status || !campaign) return
+    if (stats.campaign_status !== campaign.status) {
+      queryClient.setQueryData<Campaign>(queryKeys.campaigns.single(id), (prev) =>
+        prev ? { ...prev, status: stats.campaign_status } : prev
+      )
+    }
+  }, [stats?.campaign_status, campaign?.status, id, queryClient])
+
   const { data: leadsData, isLoading: leadsLoading } = useQuery({
     queryKey: queryKeys.leads.all({ campaign_id: id, page, limit: PAGE_SIZE }),
     queryFn: () => getLeads({ campaign_id: id, page, limit: PAGE_SIZE }),
@@ -154,6 +168,7 @@ export default function CampaignDetailPage() {
     mutationFn: () => importLeads(selectedFile!, id, columnMap),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all({ campaign_id: id }) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.stats(id) })
       toast.success(t['common.success'])
       setImportOpen(false)
       setSelectedFile(null)
@@ -213,6 +228,9 @@ export default function CampaignDetailPage() {
 
   if (campaignLoading) return <PageLoader />
 
+  const badgeStatus: Campaign['status'] =
+    stats?.campaign_status ?? campaign?.status ?? 'draft'
+
   const replyBreakdown = [
     { label: t['campaigns.positive'], value: stats?.reply_breakdown?.positive ?? 0 },
     { label: t['campaigns.negative'], value: stats?.reply_breakdown?.negative ?? 0 },
@@ -237,7 +255,7 @@ export default function CampaignDetailPage() {
         action={
           <div className="flex items-center gap-3">
             {campaign && (
-              <StatusBadge status={campaign.status} label={statusLabel(campaign.status)} />
+              <StatusBadge status={badgeStatus} label={statusLabel(badgeStatus)} />
             )}
             <Button
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -247,6 +265,17 @@ export default function CampaignDetailPage() {
               <Upload className="h-4 w-4 mr-2" />
               {t['targetGroups.importLeads']}
             </Button>
+            {campaign?.campaign_sequences?.[0]?.sequence_id && (
+              <Link
+                href={`/sequences/${campaign.campaign_sequences[0].sequence_id}`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ListOrdered className="h-4 w-4 mr-2" />
+                {t['campaigns.sequence']}
+              </Link>
+            )}
             {campaign?.status === 'active' && (
               <Button
                 variant="outline"
@@ -285,25 +314,40 @@ export default function CampaignDetailPage() {
       />
 
       {/* Stats cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {statsLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full rounded-lg" />
           ))
         ) : (
-          [
-            { label: t['campaigns.sent'], value: stats?.sent ?? 0 },
-            { label: t['campaigns.pending'], value: stats?.pending ?? 0 },
-            { label: t['campaigns.replied'], value: stats?.replied ?? 0 },
-            { label: t['campaigns.failed'], value: stats?.failed ?? 0 },
-          ].map(({ label, value }) => (
-            <Card key={label} className="border-slate-200 shadow-sm">
+          <>
+            {[
+              { label: t['campaigns.sent'], value: stats?.sent ?? 0 },
+              { label: t['campaigns.pending'], value: stats?.pending ?? 0 },
+              { label: t['campaigns.replied'], value: stats?.replied ?? 0 },
+              { label: t['campaigns.failed'], value: stats?.failed ?? 0 },
+            ].map(({ label, value }) => (
+              <Card key={label} className="border-slate-200 shadow-sm">
+                <CardContent className="p-5">
+                  <p className="text-sm text-slate-500 mb-1">{label}</p>
+                  <p className="text-3xl font-semibold text-slate-900">{value}</p>
+                </CardContent>
+              </Card>
+            ))}
+            <Card className="border-slate-200 shadow-sm">
               <CardContent className="p-5">
-                <p className="text-sm text-slate-500 mb-1">{label}</p>
-                <p className="text-3xl font-semibold text-slate-900">{value}</p>
+                <p className="text-sm text-slate-500 mb-1">{t['campaigns.sequenceProgress']}</p>
+                <p className="text-3xl font-semibold text-slate-900 tabular-nums">
+                  {stats?.steps_executed ?? 0} / {stats?.steps_total ?? 0}
+                </p>
+                <p className="text-xs text-slate-500 mt-2 leading-snug">
+                  {t['campaigns.stepsExecutedDetail']
+                    .replace('{executed}', String(stats?.steps_executed ?? 0))
+                    .replace('{total}', String(stats?.steps_total ?? 0))}
+                </p>
               </CardContent>
             </Card>
-          ))
+          </>
         )}
       </div>
 

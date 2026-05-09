@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { getCampaigns } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
@@ -28,6 +27,11 @@ interface Campaign {
   target_group?: { name: string }
   campaign_sequences?: { sequence: { name: string } | null }[]
   created_at: string
+  contacts_count?: number
+  steps_executed?: number
+  steps_total?: number
+  replies_count?: number
+  positive_replies_count?: number
 }
 
 export default function CampaignsPage() {
@@ -88,23 +92,35 @@ export default function CampaignsPage() {
           }
         />
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-lg border border-slate-200 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['campaigns.name']}
                 </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['campaigns.status']}
                 </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  {t['campaigns.contacts']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  {t['campaigns.progress']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  {t['campaigns.totalReplies']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  {t['campaigns.positiveRepliesColumn']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['campaigns.targetGroup']}
                 </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['campaigns.sequence']}
                 </TableHead>
-                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['common.createdAt']}
                 </TableHead>
               </TableRow>
@@ -125,13 +141,32 @@ export default function CampaignsPage() {
                       label={statusLabel(campaign.status)}
                     />
                   </TableCell>
+                  <TableCell className="text-slate-700 text-sm tabular-nums">
+                    {campaign.contacts_count ?? 0}
+                  </TableCell>
+                  <TableCell className="text-slate-600 text-sm min-w-[9rem]">
+                    <p className="font-medium tabular-nums text-slate-900">
+                      {campaign.steps_executed ?? 0} / {campaign.steps_total ?? 0}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                      {t['campaigns.stepsExecutedDetail']
+                        .replace('{executed}', String(campaign.steps_executed ?? 0))
+                        .replace('{total}', String(campaign.steps_total ?? 0))}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-slate-700 text-sm tabular-nums">
+                    {campaign.replies_count ?? 0}
+                  </TableCell>
+                  <TableCell className="text-slate-700 text-sm tabular-nums">
+                    {campaign.positive_replies_count ?? 0}
+                  </TableCell>
                   <TableCell className="text-slate-500 text-sm">
                     {campaign.target_group?.name ?? '—'}
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm">
                     {campaign.campaign_sequences?.[0]?.sequence?.name ?? '—'}
                   </TableCell>
-                  <TableCell className="text-slate-400 text-sm">
+                  <TableCell className="text-slate-400 text-sm whitespace-nowrap">
                     {new Date(campaign.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>

@@ -72,6 +72,12 @@ export const bg = {
   'campaigns.count': 'Брой',
   'campaigns.creating': 'Създаване...',
   'campaigns.backToCampaigns': 'Обратно към кампаниите',
+  'campaigns.sequenceProgress': 'Прогрес на последователността',
+  'campaigns.stepsExecutedDetail': '{executed} от {total} изпратени стъпки',
+  'campaigns.contacts': 'Контакти',
+  'campaigns.progress': 'Прогрес',
+  'campaigns.totalReplies': 'Отговори',
+  'campaigns.positiveRepliesColumn': 'Положителни',
 
   // Sequences
   'sequences.title': 'Последователности',
