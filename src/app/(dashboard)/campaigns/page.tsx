@@ -19,11 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 interface Campaign {
   id: string
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
+  send_on_weekends?: boolean
   target_group?: { name: string }
   campaign_sequences?: { sequence: { name: string } | null }[]
   created_at: string
@@ -121,6 +123,9 @@ export default function CampaignsPage() {
                   {t['campaigns.sequence']}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  {t['campaigns.sendOnWeekends']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">
                   {t['common.createdAt']}
                 </TableHead>
               </TableRow>
@@ -165,6 +170,13 @@ export default function CampaignsPage() {
                   </TableCell>
                   <TableCell className="text-slate-500 text-sm">
                     {campaign.campaign_sequences?.[0]?.sequence?.name ?? '—'}
+                  </TableCell>
+                  <TableCell className="text-slate-600 text-sm whitespace-nowrap">
+                    <Badge variant="outline" className="font-normal border-slate-200 text-slate-700">
+                      {campaign.send_on_weekends
+                        ? t['campaigns.sendOnWeekendsOn']
+                        : t['campaigns.sendOnWeekendsOff']}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-slate-400 text-sm whitespace-nowrap">
                     {new Date(campaign.created_at).toLocaleDateString()}

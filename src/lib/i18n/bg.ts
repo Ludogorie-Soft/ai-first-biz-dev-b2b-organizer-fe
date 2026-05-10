@@ -78,6 +78,12 @@ export const bg = {
   'campaigns.progress': 'Прогрес',
   'campaigns.totalReplies': 'Отговори',
   'campaigns.positiveRepliesColumn': 'Положителни',
+  'campaigns.sendOnWeekends': 'График на изпращане',
+  'campaigns.sendOnWeekendsOn': 'Всеки ден',
+  'campaigns.sendOnWeekendsOff': 'Само работни дни',
+  'campaigns.sendOnWeekendsLabel': 'Позволи изпращане в почивните дни',
+  'campaigns.sendOnWeekendsHint':
+    'Изкл.: имейли само пн–пт (работно време Europe/Sofia). Вкл.: и събота/неделя.',
 
   // Sequences
   'sequences.title': 'Последователности',

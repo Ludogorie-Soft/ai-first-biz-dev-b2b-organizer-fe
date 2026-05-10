@@ -78,6 +78,12 @@ export const en = {
   'campaigns.progress': 'Progress',
   'campaigns.totalReplies': 'Replies',
   'campaigns.positiveRepliesColumn': 'Positive replies',
+  'campaigns.sendOnWeekends': 'Sending schedule',
+  'campaigns.sendOnWeekendsOn': 'Any day',
+  'campaigns.sendOnWeekendsOff': 'Workdays only',
+  'campaigns.sendOnWeekendsLabel': 'Allow sending on weekends',
+  'campaigns.sendOnWeekendsHint':
+    'Off: emails send Mon–Fri only (Europe/Sofia business hours). On: Saturday and Sunday included.',
 
   // Sequences
   'sequences.title': 'Sequences',

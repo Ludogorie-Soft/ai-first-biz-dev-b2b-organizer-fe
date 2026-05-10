@@ -39,11 +39,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Switch } from '@/components/ui/switch'
 
 interface Campaign {
   id: string
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
+  send_on_weekends?: boolean
   campaign_sequences?: { sequence_id: string }[]
 }
 
@@ -134,7 +136,7 @@ export default function CampaignDetailPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const updateMutation = useMutation({
-    mutationFn: (status: string) => updateCampaign(id, { status }),
+    mutationFn: (data: Record<string, unknown>) => updateCampaign(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.single(id) })
       toast.success(t['common.success'])
@@ -276,11 +278,24 @@ export default function CampaignDetailPage() {
                 {t['campaigns.sequence']}
               </Link>
             )}
+            {campaign && (
+              <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50/80 px-3 py-1.5">
+                <Switch
+                  id="campaign-send-weekends"
+                  checked={campaign.send_on_weekends ?? false}
+                  onCheckedChange={(v) => updateMutation.mutate({ send_on_weekends: v })}
+                  disabled={updateMutation.isPending}
+                />
+                <Label htmlFor="campaign-send-weekends" className="text-xs font-normal text-slate-600 cursor-pointer">
+                  {t['campaigns.sendOnWeekendsLabel']}
+                </Label>
+              </div>
+            )}
             {campaign?.status === 'active' && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => updateMutation.mutate('paused')}
+                onClick={() => updateMutation.mutate({ status: 'paused' })}
                 disabled={updateMutation.isPending}
               >
                 <Pause className="h-4 w-4 mr-2" />
@@ -292,7 +307,7 @@ export default function CampaignDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => updateMutation.mutate('active')}
+                  onClick={() => updateMutation.mutate({ status: 'active' })}
                   disabled={updateMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />

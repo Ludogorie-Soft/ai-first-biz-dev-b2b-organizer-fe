@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -31,6 +32,7 @@ const schema = z.object({
   target_group_id: z.string().min(1),
   sequence_ids: z.array(z.string()).min(1),
   mailbox_ids: z.array(z.string()).min(1),
+  send_on_weekends: z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -59,10 +61,11 @@ export default function NewCampaignPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { mailbox_ids: [], sequence_ids: [] },
+    defaultValues: { mailbox_ids: [], sequence_ids: [], send_on_weekends: false },
   })
 
   const selectedMailboxIds = watch('mailbox_ids')
+  const sendOnWeekends = watch('send_on_weekends')
   const selectedTargetGroupId = watch('target_group_id')
   const selectedSequenceIds = watch('sequence_ids')
 
@@ -179,6 +182,22 @@ export default function NewCampaignPage() {
               {errors.mailbox_ids && (
                 <p className="text-xs text-red-500">{errors.mailbox_ids.message}</p>
               )}
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-md border border-slate-200 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="send_on_weekends" className="text-slate-900">
+                  {t['campaigns.sendOnWeekendsLabel']}
+                </Label>
+                <p className="text-xs text-slate-500">
+                  {t['campaigns.sendOnWeekendsHint']}
+                </p>
+              </div>
+              <Switch
+                id="send_on_weekends"
+                checked={sendOnWeekends ?? false}
+                onCheckedChange={(v) => setValue('send_on_weekends', v, { shouldValidate: true })}
+              />
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
