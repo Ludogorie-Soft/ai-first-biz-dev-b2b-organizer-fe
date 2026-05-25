@@ -61,8 +61,8 @@ interface MailboxLimit {
 
 const limitsSchema = z
   .object({
-    daily_email_limit: z.number({ invalid_type_error: 'Required' }).int().min(1),
-    weekly_email_limit: z.number({ invalid_type_error: 'Required' }).int().min(1),
+    daily_email_limit: z.number({ error: 'Required' }).int().min(1),
+    weekly_email_limit: z.number({ error: 'Required' }).int().min(1),
   })
   .refine((d) => d.weekly_email_limit >= d.daily_email_limit, {
     message: 'Weekly limit must be ≥ daily limit',
