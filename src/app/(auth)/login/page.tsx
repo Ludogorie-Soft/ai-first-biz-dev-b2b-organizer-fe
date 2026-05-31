@@ -41,7 +41,7 @@ export default function LoginPage() {
       const user = data.user || { id: data.id || '', email: data.email || '' }
       queryClient.clear()
       setAuth(token, refreshToken, user)
-      router.push('/campaigns')
+      router.push('/setup')
     },
     onError: (err: unknown) => {
       const raw = (err as { response?: { data?: { error?: unknown } } })?.response?.data?.error

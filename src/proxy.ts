@@ -23,6 +23,7 @@ export function proxy(request: NextRequest) {
       pathname.startsWith('/target-groups') ||
       pathname.startsWith('/mailboxes') ||
       pathname.startsWith('/settings') ||
+      pathname.startsWith('/setup') ||
       pathname === '/') {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/login', request.url))
@@ -31,7 +32,7 @@ export function proxy(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if ((pathname === '/login' || pathname === '/register' || pathname === '/pending-approval' || pathname.startsWith('/accept-invite')) && isAuthenticated) {
-    return NextResponse.redirect(new URL('/campaigns', request.url))
+    return NextResponse.redirect(new URL('/setup', request.url))
   }
 
   return NextResponse.next()

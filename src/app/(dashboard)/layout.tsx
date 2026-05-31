@@ -1,4 +1,5 @@
 import { Sidebar } from '@/components/layout/Sidebar'
+import { SetupGuard } from '@/components/layout/SetupGuard'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -6,7 +7,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
       <div className="flex-1 ml-60 flex flex-col min-h-screen">
         <main className="flex-1 px-8 py-8">
-          {children}
+          <SetupGuard>{children}</SetupGuard>
         </main>
       </div>
     </div>

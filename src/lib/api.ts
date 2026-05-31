@@ -148,6 +148,12 @@ export const deleteCampaign = (id: string) =>
   api.delete(`/campaigns/${id}`).then((r) => r.data)
 export const getCampaignStats = (id: string) =>
   api.get(`/campaigns/${id}/stats`).then((r) => r.data)
+export const triggerNextStep = (id: string, force: boolean) =>
+  api.post(`/campaigns/${id}/trigger-next-step`, { force }).then((r) => r.data)
+export const getCampaignEmailLogs = (
+  id: string,
+  params: { page?: number; limit?: number; status?: 'sent' | 'failed' }
+) => api.get(`/campaigns/${id}/email-logs`, { params }).then((r) => r.data)
 
 // Unsubscribe (public — no auth required)
 export const unsubscribe = (token: string) =>

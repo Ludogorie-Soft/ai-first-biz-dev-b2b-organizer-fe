@@ -81,7 +81,7 @@ export function CompanySwitcher() {
     setOpen(false)
     setSearch('')
     queryClient.clear()
-    router.push('/campaigns')
+    router.push('/setup')
   }
 
   const filtered = validCompanies.filter((c) =>

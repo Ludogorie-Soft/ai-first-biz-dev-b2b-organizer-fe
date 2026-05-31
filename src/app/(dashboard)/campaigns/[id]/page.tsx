@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download, ListOrdered } from 'lucide-react'
+import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download, ListOrdered, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef, useEffect } from 'react'
-import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate } from '@/lib/api'
+import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate, triggerNextStep, getCampaignEmailLogs } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -77,7 +77,19 @@ interface Lead {
   notes?: string
 }
 
+interface EmailLogEntry {
+  id: string
+  status: 'sent' | 'failed'
+  sent_subject: string | null
+  sent_at: string | null
+  reply_category: string | null
+  lead: { id: string; email: string; first_name?: string | null; last_name?: string | null } | null
+  step: { step_order: number } | null
+  mailbox: { email: string } | null
+}
+
 const PAGE_SIZE = 20
+const LOGS_PAGE_SIZE = 20
 
 // Column names used in the downloadable template
 const TEMPLATE_COLUMN_MAP: Record<string, string> = {
@@ -96,6 +108,14 @@ export default function CampaignDetailPage() {
   const queryClient = useQueryClient()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
+  // Trigger next step state
+  const [showTriggerConfirm, setShowTriggerConfirm] = useState(false)
+  const [triggerConfirmData, setTriggerConfirmData] = useState<{
+    days_remaining: number
+    delay_days: number
+    affected_leads: number
+  } | null>(null)
+
   // Import state
   const [importOpen, setImportOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -106,6 +126,10 @@ export default function CampaignDetailPage() {
 
   // Leads pagination
   const [page, setPage] = useState(1)
+
+  // Email logs
+  const [logsPage, setLogsPage] = useState(1)
+  const [logsStatusFilter, setLogsStatusFilter] = useState<'all' | 'sent' | 'failed'>('all')
 
   const { data: campaign, isLoading: campaignLoading } = useQuery<Campaign>({
     queryKey: queryKeys.campaigns.single(id),
@@ -134,6 +158,19 @@ export default function CampaignDetailPage() {
   const leads: Lead[] = leadsData?.data || leadsData?.leads || leadsData || []
   const total = leadsData?.total ?? leads.length
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+  const logsQueryParams = {
+    page: logsPage,
+    limit: LOGS_PAGE_SIZE,
+    ...(logsStatusFilter !== 'all' && { status: logsStatusFilter as 'sent' | 'failed' }),
+  }
+  const { data: logsData, isLoading: logsLoading } = useQuery({
+    queryKey: queryKeys.campaigns.emailLogs(id, logsQueryParams),
+    queryFn: () => getCampaignEmailLogs(id, logsQueryParams),
+  })
+  const emailLogs: EmailLogEntry[] = logsData?.data ?? []
+  const logsTotal: number = logsData?.total ?? 0
+  const logsTotalPages = Math.max(1, Math.ceil(logsTotal / LOGS_PAGE_SIZE))
 
   const updateMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => updateCampaign(id, data),
@@ -176,6 +213,26 @@ export default function CampaignDetailPage() {
       setSelectedFile(null)
       setPreviewColumns([])
       setColumnMap({})
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  const triggerNextStepMutation = useMutation({
+    mutationFn: (force: boolean) => triggerNextStep(id, force),
+    onSuccess: (data: { needs_confirmation: boolean; days_remaining?: number; delay_days?: number; affected_leads?: number; enqueued?: number }) => {
+      if (data.needs_confirmation) {
+        setTriggerConfirmData({
+          days_remaining: data.days_remaining ?? 0,
+          delay_days: data.delay_days ?? 0,
+          affected_leads: data.affected_leads ?? 0,
+        })
+        setShowTriggerConfirm(true)
+      } else if ((data.enqueued ?? 0) === 0) {
+        toast.info(t['campaigns.triggerNoLeads'])
+      } else {
+        toast.success(t['campaigns.triggeredSuccess'])
+        queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.stats(id) })
+      }
     },
     onError: () => toast.error(t['common.error']),
   })
@@ -290,6 +347,20 @@ export default function CampaignDetailPage() {
                   {t['campaigns.sendOnWeekendsLabel']}
                 </Label>
               </div>
+            )}
+            {campaign?.status === 'active' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400"
+                onClick={() => triggerNextStepMutation.mutate(false)}
+                disabled={triggerNextStepMutation.isPending}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {triggerNextStepMutation.isPending
+                  ? t['campaigns.triggering']
+                  : t['campaigns.triggerNextStep']}
+              </Button>
             )}
             {campaign?.status === 'active' && (
               <Button
@@ -478,7 +549,7 @@ export default function CampaignDetailPage() {
       </div>
 
       {/* Reply breakdown */}
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden max-w-md">
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden max-w-md mb-8">
         <div className="px-5 py-4 border-b border-slate-100">
           <h2 className="text-sm font-semibold text-slate-700">{t['campaigns.replyBreakdown']}</h2>
         </div>
@@ -503,6 +574,181 @@ export default function CampaignDetailPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Sending history / email logs */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-700">{t['campaigns.emailLogs']}</h2>
+          <div className="flex gap-1">
+            {(['all', 'sent', 'failed'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => { setLogsStatusFilter(f); setLogsPage(1) }}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                  logsStatusFilter === f
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {f === 'all'
+                  ? t['campaigns.emailLogsFilterAll']
+                  : f === 'sent'
+                  ? t['campaigns.emailLogsFilterSent']
+                  : t['campaigns.emailLogsFilterFailed']}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {logsLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : emailLogs.length === 0 ? (
+          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <p className="text-sm text-slate-400">{t['campaigns.emailLogsNoLogs']}</p>
+          </div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide w-16">
+                      {t['campaigns.emailLogsStep']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsRecipient']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsSubject']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsMailbox']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsSentAt']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsStatus']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['campaigns.emailLogsReply']}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {emailLogs.map((log) => {
+                    const recipientName = [log.lead?.first_name, log.lead?.last_name]
+                      .filter(Boolean)
+                      .join(' ')
+                    const sentAtFormatted = log.sent_at
+                      ? new Date(log.sent_at).toLocaleString()
+                      : '—'
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell className="text-slate-500 text-sm text-center">
+                          {log.step?.step_order != null ? `#${log.step.step_order}` : '—'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <span className="font-medium text-slate-900">{log.lead?.email ?? '—'}</span>
+                          {recipientName && (
+                            <span className="block text-xs text-slate-400">{recipientName}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-slate-600 text-sm max-w-xs truncate">
+                          {log.sent_subject ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {log.mailbox?.email ?? '—'}
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm whitespace-nowrap">
+                          {sentAtFormatted}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              log.status === 'sent'
+                                ? 'bg-green-50 text-green-700'
+                                : 'bg-red-50 text-red-700'
+                            }`}
+                          >
+                            {log.status === 'sent'
+                              ? t['campaigns.emailLogsStatusSent']
+                              : t['campaigns.emailLogsStatusFailed']}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-slate-500 text-sm">
+                          {log.reply_category ?? '—'}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-slate-500">
+                {t['common.page']} {logsPage} {t['common.of']} {logsTotalPages}
+                {' '}({logsTotal})
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
+                  disabled={logsPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  {t['common.prev']}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLogsPage((p) => Math.min(logsTotalPages, p + 1))}
+                  disabled={logsPage === logsTotalPages}
+                >
+                  {t['common.next']}
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Trigger next step confirmation dialog */}
+      <Dialog open={showTriggerConfirm} onOpenChange={setShowTriggerConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t['campaigns.triggerConfirmTitle']}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500">
+            {t['campaigns.triggerConfirmDesc']
+              .replace('{delay_days}', String(triggerConfirmData?.delay_days ?? 0))
+              .replace('{days_remaining}', String(triggerConfirmData?.days_remaining ?? 0))}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTriggerConfirm(false)}>
+              {t['common.cancel']}
+            </Button>
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              onClick={() => {
+                setShowTriggerConfirm(false)
+                triggerNextStepMutation.mutate(true)
+              }}
+              disabled={triggerNextStepMutation.isPending}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {t['campaigns.triggerNextStep']}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

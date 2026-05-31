@@ -84,6 +84,26 @@ export const bg = {
   'campaigns.sendOnWeekendsLabel': 'Позволи изпращане в почивните дни',
   'campaigns.sendOnWeekendsHint':
     'Изкл.: имейли само пн–пт (работно време Europe/Sofia). Вкл.: и събота/неделя.',
+  'campaigns.triggerNextStep': 'Изпрати следващите имейли',
+  'campaigns.triggering': 'Изпращане...',
+  'campaigns.triggeredSuccess': 'Имейлите са поставени в опашката за изпращане',
+  'campaigns.triggerConfirmTitle': 'Изпрати преди срока?',
+  'campaigns.triggerConfirmDesc': 'Следващата стъпка е планирана след {delay_days} дни, но все още има {days_remaining} дни до насрочения момент. Искате ли да изпратите имейлите сега?',
+  'campaigns.triggerNoLeads': 'Няма активни контакти за изпращане',
+  'campaigns.emailLogs': 'История на изпращанията',
+  'campaigns.emailLogsStep': 'Стъпка',
+  'campaigns.emailLogsSubject': 'Тема',
+  'campaigns.emailLogsRecipient': 'Получател',
+  'campaigns.emailLogsMailbox': 'Изпратено от',
+  'campaigns.emailLogsSentAt': 'Дата',
+  'campaigns.emailLogsStatus': 'Статус',
+  'campaigns.emailLogsReply': 'Отговор',
+  'campaigns.emailLogsStatusSent': 'Изпратен',
+  'campaigns.emailLogsStatusFailed': 'Неуспешен',
+  'campaigns.emailLogsNoLogs': 'Все още няма записи за изпращания',
+  'campaigns.emailLogsFilterAll': 'Всички',
+  'campaigns.emailLogsFilterSent': 'Изпратени',
+  'campaigns.emailLogsFilterFailed': 'Неуспешни',
 
   // Sequences
   'sequences.title': 'Последователности',
@@ -283,6 +303,18 @@ export const bg = {
   'common.submitting': 'Изпращане...',
   'common.select': 'Изберете...',
   'common.search': 'Търсене...',
+
+  // Setup
+  'setup.title': 'Първоначална настройка',
+  'setup.description': 'Завършете следните стъпки преди да започнете да използвате платформата.',
+  'setup.step.mailbox': 'Пощенска кутия',
+  'setup.step.mailboxDesc': 'Имейл адрес, от който се изпращат кампаниите към вашите контакти.',
+  'setup.step.sequence': 'Последователност',
+  'setup.step.sequenceDesc': 'Набор от последователни имейли, които се изпращат автоматично към контактите.',
+  'setup.step.targetGroup': 'Целева група',
+  'setup.step.targetGroupDesc': 'Начин за организиране на кампаниите, може да имате много кампании към една и съща целева група.',
+  'setup.addNow': 'Добави сега',
+  'setup.allDone': 'Всичко е готово! Пренасочване...',
 } as const
 
 export type TranslationKey = keyof typeof bg

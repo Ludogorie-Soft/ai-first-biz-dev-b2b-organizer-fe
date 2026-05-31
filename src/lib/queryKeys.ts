@@ -7,6 +7,7 @@ export const queryKeys = {
     all: ['campaigns'] as const,
     single: (id: string) => ['campaigns', id] as const,
     stats: (id: string) => ['campaigns', id, 'stats'] as const,
+    emailLogs: (id: string, params?: object) => ['campaigns', id, 'email-logs', params] as const,
   },
   sequences: {
     all: ['sequences'] as const,

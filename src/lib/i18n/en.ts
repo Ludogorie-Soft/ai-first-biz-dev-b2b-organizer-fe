@@ -84,6 +84,26 @@ export const en = {
   'campaigns.sendOnWeekendsLabel': 'Allow sending on weekends',
   'campaigns.sendOnWeekendsHint':
     'Off: emails send Mon–Fri only (Europe/Sofia business hours). On: Saturday and Sunday included.',
+  'campaigns.triggerNextStep': 'Send Next Emails',
+  'campaigns.triggering': 'Sending...',
+  'campaigns.triggeredSuccess': 'Emails have been queued for sending',
+  'campaigns.triggerConfirmTitle': 'Send before schedule?',
+  'campaigns.triggerConfirmDesc': 'The next step is scheduled after {delay_days} days, but {days_remaining} days still remain until the scheduled time. Do you want to send the emails now?',
+  'campaigns.triggerNoLeads': 'No active leads to send to',
+  'campaigns.emailLogs': 'Sending History',
+  'campaigns.emailLogsStep': 'Step',
+  'campaigns.emailLogsSubject': 'Subject',
+  'campaigns.emailLogsRecipient': 'Recipient',
+  'campaigns.emailLogsMailbox': 'Sent from',
+  'campaigns.emailLogsSentAt': 'Date',
+  'campaigns.emailLogsStatus': 'Status',
+  'campaigns.emailLogsReply': 'Reply',
+  'campaigns.emailLogsStatusSent': 'Sent',
+  'campaigns.emailLogsStatusFailed': 'Failed',
+  'campaigns.emailLogsNoLogs': 'No sending records yet',
+  'campaigns.emailLogsFilterAll': 'All',
+  'campaigns.emailLogsFilterSent': 'Sent',
+  'campaigns.emailLogsFilterFailed': 'Failed',
 
   // Sequences
   'sequences.title': 'Sequences',
@@ -283,6 +303,18 @@ export const en = {
   'common.submitting': 'Submitting...',
   'common.select': 'Select...',
   'common.search': 'Search...',
+
+  // Setup
+  'setup.title': 'Initial Setup',
+  'setup.description': 'Complete the following steps before you start using the platform.',
+  'setup.step.mailbox': 'Mailbox',
+  'setup.step.mailboxDesc': 'The email address used to send campaign messages to your contacts.',
+  'setup.step.sequence': 'Sequence',
+  'setup.step.sequenceDesc': 'A series of emails sent automatically to contacts over time.',
+  'setup.step.targetGroup': 'Target Group',
+  'setup.step.targetGroupDesc': 'A way to organize campaigns — you can run many campaigns against the same target group.',
+  'setup.addNow': 'Add now',
+  'setup.allDone': 'All done! Redirecting...',
 } as const
 
 export type EnTranslationKey = keyof typeof en
