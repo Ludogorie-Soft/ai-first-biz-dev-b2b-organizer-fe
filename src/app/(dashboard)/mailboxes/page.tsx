@@ -271,13 +271,29 @@ export default function MailboxesPage() {
             className="space-y-4"
           >
             <div className="space-y-1.5">
-              <Label>{t['mailboxes.email']}</Label>
-              <Input type="email" {...register('email')} className={errors.email ? 'border-red-300' : ''} />
+              <div className="flex items-center gap-1.5">
+                <Label>{t['mailboxes.email']}</Label>
+                <div className="relative group">
+                  <Info className="h-3.5 w-3.5 text-slate-400 cursor-help hover:text-slate-600" />
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block w-72 rounded-md bg-slate-800 px-3 py-2 text-xs text-slate-100 shadow-lg">
+                    {t['mailboxes.emailInfo']}
+                  </div>
+                </div>
+              </div>
+              <Input type="email" placeholder="sender-email@yourdomain.com" {...register('email')} className={errors.email ? 'border-red-300' : ''} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>{t['mailboxes.imapHost']}</Label>
-                <Input {...register('imap_host')} className={errors.imap_host ? 'border-red-300' : ''} />
+                <div className="flex items-center gap-1.5">
+                  <Label>{t['mailboxes.imapHost']}</Label>
+                  <div className="relative group">
+                    <Info className="h-3.5 w-3.5 text-slate-400 cursor-help hover:text-slate-600" />
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block w-72 rounded-md bg-slate-800 px-3 py-2 text-xs text-slate-100 shadow-lg">
+                      {t['mailboxes.imapHostInfo']}
+                    </div>
+                  </div>
+                </div>
+                <Input placeholder="mail.yourdomain.com" {...register('imap_host')} className={errors.imap_host ? 'border-red-300' : ''} />
               </div>
               <div className="space-y-1.5">
                 <Label>{t['mailboxes.imapPort']}</Label>
@@ -285,8 +301,16 @@ export default function MailboxesPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>{t['mailboxes.imapUser']}</Label>
-              <Input {...register('imap_user')} className={errors.imap_user ? 'border-red-300' : ''} />
+              <div className="flex items-center gap-1.5">
+                <Label>{t['mailboxes.imapUser']}</Label>
+                <div className="relative group">
+                  <Info className="h-3.5 w-3.5 text-slate-400 cursor-help hover:text-slate-600" />
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block w-72 rounded-md bg-slate-800 px-3 py-2 text-xs text-slate-100 shadow-lg">
+                    {t['mailboxes.imapUserInfo']}
+                  </div>
+                </div>
+              </div>
+              <Input placeholder="sender-email@yourdomain.com" {...register('imap_user')} className={errors.imap_user ? 'border-red-300' : ''} />
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
