@@ -177,6 +177,8 @@ export const bg = {
   'admin.noPendingMailboxesDesc': 'Всички регистрирани пощенски кутии са одобрени.',
   'admin.approve': 'Одобри в SES',
   'admin.approving': 'Одобряване...',
+  'admin.approveDomain': 'Пропусни SES одобрение (Домейнът е одобрен)',
+  'admin.approvingDomain': 'Одобряване...',
   'admin.company': 'Компания',
   'admin.pendingCampaigns': 'Чакащи кампании',
   'admin.approvedSuccess': 'Пощенската кутия е одобрена',

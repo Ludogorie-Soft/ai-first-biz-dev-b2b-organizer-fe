@@ -10,6 +10,7 @@ import { z } from 'zod'
 import {
   getAdminPendingMailboxes,
   approveMailbox,
+  approveMailboxDomain,
   getAdminMailboxLimits,
   updateMailboxEmailLimits,
 } from '@/lib/api'
@@ -104,6 +105,20 @@ export default function AdminPage() {
     },
   })
 
+  const approveDomainMutation = useMutation({
+    mutationFn: approveMailboxDomain,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.pendingMailboxes })
+      const activated = result?.activated_campaigns ?? 0
+      if (activated > 0) {
+        toast.success(`${t['admin.approvedSuccess']} — ${activated} ${t['admin.campaignsActivated']}`)
+      } else {
+        toast.success(t['admin.approvedSuccess'])
+      }
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
   // Email limits
   const { data: limitsData, isLoading: limitsLoading, isError: limitsError } = useQuery({
     queryKey: queryKeys.admin.mailboxLimits,
@@ -196,14 +211,26 @@ export default function AdminPage() {
                         {new Date(mb.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                          disabled={approveMutation.isPending}
-                          onClick={() => approveMutation.mutate(mb.id)}
-                        >
-                          {approveMutation.isPending ? t['admin.approving'] : t['admin.approve']}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={approveDomainMutation.isPending}
+                            onClick={() => approveDomainMutation.mutate(mb.id)}
+                          >
+                            {approveDomainMutation.isPending
+                              ? t['admin.approvingDomain']
+                              : t['admin.approveDomain']}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            disabled={approveMutation.isPending}
+                            onClick={() => approveMutation.mutate(mb.id)}
+                          >
+                            {approveMutation.isPending ? t['admin.approving'] : t['admin.approve']}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

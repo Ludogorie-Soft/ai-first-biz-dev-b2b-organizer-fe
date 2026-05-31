@@ -177,6 +177,8 @@ export const en = {
   'admin.noPendingMailboxesDesc': 'All registered mailboxes have been approved.',
   'admin.approve': 'Approve in SES',
   'admin.approving': 'Approving...',
+  'admin.approveDomain': 'Skip SES approval (Domain is approved)',
+  'admin.approvingDomain': 'Approving...',
   'admin.company': 'Company',
   'admin.pendingCampaigns': 'Pending campaigns',
   'admin.approvedSuccess': 'Mailbox approved',
