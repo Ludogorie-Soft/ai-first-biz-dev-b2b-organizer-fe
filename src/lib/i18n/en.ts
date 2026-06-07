@@ -104,6 +104,8 @@ export const en = {
   'campaigns.emailLogsFilterAll': 'All',
   'campaigns.emailLogsFilterSent': 'Sent',
   'campaigns.emailLogsFilterFailed': 'Failed',
+  'campaigns.emailLogsErrorTitle': 'Send Error',
+  'campaigns.emailLogsViewError': 'View error',
 
   // Sequences
   'sequences.title': 'Sequences',

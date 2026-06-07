@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download, ListOrdered, Send } from 'lucide-react'
+import { ArrowLeft, Pause, Play, Trash2, Upload, ChevronLeft, ChevronRight, RotateCcw, Download, ListOrdered, Send, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef, useEffect } from 'react'
 import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate, triggerNextStep, getCampaignEmailLogs } from '@/lib/api'
@@ -82,6 +82,8 @@ interface EmailLogEntry {
   status: 'sent' | 'failed'
   sent_subject: string | null
   sent_at: string | null
+  error_message?: string | null
+  recipient_email?: string | null
   reply_category: string | null
   lead: { id: string; email: string; first_name?: string | null; last_name?: string | null } | null
   step: { step_order: number } | null
@@ -130,6 +132,7 @@ export default function CampaignDetailPage() {
   // Email logs
   const [logsPage, setLogsPage] = useState(1)
   const [logsStatusFilter, setLogsStatusFilter] = useState<'all' | 'sent' | 'failed'>('all')
+  const [errorPopupLog, setErrorPopupLog] = useState<EmailLogEntry | null>(null)
 
   const { data: campaign, isLoading: campaignLoading } = useQuery<Campaign>({
     queryKey: queryKeys.campaigns.single(id),
@@ -647,13 +650,25 @@ export default function CampaignDetailPage() {
                     const sentAtFormatted = log.sent_at
                       ? new Date(log.sent_at).toLocaleString()
                       : '—'
+                    const displayEmail = log.recipient_email ?? log.lead?.email ?? '—'
+                    const isOfficeEmail =
+                      !!log.recipient_email &&
+                      !!log.lead?.email &&
+                      log.recipient_email.toLowerCase() !== log.lead.email.toLowerCase()
                     return (
                       <TableRow key={log.id}>
                         <TableCell className="text-slate-500 text-sm text-center">
                           {log.step?.step_order != null ? `#${log.step.step_order}` : '—'}
                         </TableCell>
                         <TableCell className="text-sm">
-                          <span className="font-medium text-slate-900">{log.lead?.email ?? '—'}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-slate-900">{displayEmail}</span>
+                            {isOfficeEmail && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-600">
+                                office
+                              </span>
+                            )}
+                          </div>
                           {recipientName && (
                             <span className="block text-xs text-slate-400">{recipientName}</span>
                           )}
@@ -668,17 +683,28 @@ export default function CampaignDetailPage() {
                           {sentAtFormatted}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              log.status === 'sent'
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-red-50 text-red-700'
-                            }`}
-                          >
-                            {log.status === 'sent'
-                              ? t['campaigns.emailLogsStatusSent']
-                              : t['campaigns.emailLogsStatusFailed']}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                log.status === 'sent'
+                                  ? 'bg-green-50 text-green-700'
+                                  : 'bg-red-50 text-red-700'
+                              }`}
+                            >
+                              {log.status === 'sent'
+                                ? t['campaigns.emailLogsStatusSent']
+                                : t['campaigns.emailLogsStatusFailed']}
+                            </span>
+                            {log.status === 'failed' && log.error_message && (
+                              <button
+                                onClick={() => setErrorPopupLog(log)}
+                                className="inline-flex items-center text-red-400 hover:text-red-600 transition-colors"
+                                title={t['campaigns.emailLogsViewError']}
+                              >
+                                <AlertCircle className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-slate-500 text-sm">
                           {log.reply_category ?? '—'}
@@ -719,6 +745,36 @@ export default function CampaignDetailPage() {
           </>
         )}
       </div>
+
+      {/* Send error details dialog */}
+      <Dialog open={!!errorPopupLog} onOpenChange={(open) => { if (!open) setErrorPopupLog(null) }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              {t['campaigns.emailLogsErrorTitle']}
+            </DialogTitle>
+          </DialogHeader>
+          {errorPopupLog && (
+            <div className="space-y-3">
+              <div className="text-xs text-slate-500 space-y-1">
+                <div><span className="font-medium text-slate-700">{t['campaigns.emailLogsRecipient']}:</span> {errorPopupLog.recipient_email ?? errorPopupLog.lead?.email ?? '—'}</div>
+                {errorPopupLog.sent_at && (
+                  <div><span className="font-medium text-slate-700">{t['campaigns.emailLogsSentAt']}:</span> {new Date(errorPopupLog.sent_at).toLocaleString()}</div>
+                )}
+              </div>
+              <pre className="bg-red-50 border border-red-200 rounded-md p-3 text-xs text-red-800 whitespace-pre-wrap break-words font-mono">
+                {errorPopupLog.error_message}
+              </pre>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setErrorPopupLog(null)}>
+              {t['common.cancel']}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Trigger next step confirmation dialog */}
       <Dialog open={showTriggerConfirm} onOpenChange={setShowTriggerConfirm}>
