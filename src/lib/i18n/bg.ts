@@ -104,6 +104,8 @@ export const bg = {
   'campaigns.emailLogsFilterAll': 'Всички',
   'campaigns.emailLogsFilterSent': 'Изпратени',
   'campaigns.emailLogsFilterFailed': 'Неуспешни',
+  'campaigns.emailLogsErrorTitle': 'Грешка при изпращане',
+  'campaigns.emailLogsViewError': 'Виж грешката',
 
   // Sequences
   'sequences.title': 'Последователности',
