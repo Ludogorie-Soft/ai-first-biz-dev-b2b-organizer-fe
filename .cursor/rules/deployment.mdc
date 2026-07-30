@@ -1,0 +1,14 @@
+---
+description: Deployment and platform constraints for this frontend project
+alwaysApply: true
+---
+
+# Deployment
+
+This frontend project is deployed on a **free (Hobby) Vercel** account.
+
+## Implications for changes
+
+- Keep client uploads within Vercel Hobby request body limits (~**4.5 MB**). Sequence attachments and similar uploads should stay at or below **4 MB** per file unless hosting changes.
+- Prefer lightweight client bundles; avoid shipping large unused dependencies.
+- Do not assume long-running server-side work in Next.js route handlers beyond Hobby function limits; heavy jobs belong on the API worker, not the FE deployment.
