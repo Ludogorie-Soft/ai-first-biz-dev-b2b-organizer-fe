@@ -134,6 +134,18 @@ export const bg = {
   'sequences.creating': 'Създаване...',
   'sequences.saving': 'Запазване...',
   'sequences.backToSequences': 'Обратно към последователностите',
+  'sequences.attachments': 'Прикачени файлове',
+  'sequences.attachmentsHint': 'До 3 файла, по 4 MB (PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT)',
+  'sequences.addAttachment': 'Добави файл',
+  'sequences.noAttachments': 'Няма прикачени файлове',
+  'sequences.uploading': 'Качване...',
+  'sequences.attachmentCount': 'файл(а)',
+  'sequences.includeSignature': 'Включи имейл подпис',
+  'sequences.includeSignatureHint': 'Добавя подписа на изпращащата пощенска кутия след тялото на всяка стъпка.',
+  'sequences.signaturePreview': 'Преглед на подпис',
+  'sequences.signaturePreviewMailbox': 'Пощенска кутия за преглед',
+  'sequences.signaturePreviewEmpty': 'Тази пощенска кутия все още няма подпис. Настройте го в Пощенски кутии.',
+  'sequences.signaturePreviewNote': 'При изпращане се използва пощенската кутия от кампанията, зададена за всеки контакт.',
 
   // Target Groups
   'targetGroups.title': 'Целеви групи',
@@ -225,6 +237,12 @@ export const bg = {
   'mailboxes.warmingUp': 'Загрява',
   'mailboxes.warmingUpTooltip': 'Тази пощенска кутия е в процес на загряване. Текущият лимит е по-нисък от конфигурирания максимум за изграждане на репутация на изпращача.',
   'mailboxes.healthCheckNotice': 'Преди да започнете кампания с тези имейли е важно да проверите качеството им, за да намалите вероятността да попадат в Спам.',
+  'mailboxes.signature': 'Имейл подпис',
+  'mailboxes.editSignature': 'Редактирай подпис',
+  'mailboxes.signatureHint': 'Добавя се към имейлите от последователности, когато е включено за последователността.',
+  'mailboxes.savingSignature': 'Запазване...',
+  'mailboxes.hasSignature': 'Има подпис',
+  'mailboxes.noSignature': 'Без подпис',
 
   // Settings
   'settings.companyProfile': 'Профил на компанията',

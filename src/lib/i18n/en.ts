@@ -134,6 +134,18 @@ export const en = {
   'sequences.creating': 'Creating...',
   'sequences.saving': 'Saving...',
   'sequences.backToSequences': 'Back to sequences',
+  'sequences.attachments': 'Attachments',
+  'sequences.attachmentsHint': 'Up to 3 files, 4 MB each (PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, TXT)',
+  'sequences.addAttachment': 'Add file',
+  'sequences.noAttachments': 'No attachments',
+  'sequences.uploading': 'Uploading...',
+  'sequences.attachmentCount': 'attachment(s)',
+  'sequences.includeSignature': 'Include email signature',
+  'sequences.includeSignatureHint': 'Append the sending mailbox signature after each step body.',
+  'sequences.signaturePreview': 'Signature preview',
+  'sequences.signaturePreviewMailbox': 'Preview mailbox',
+  'sequences.signaturePreviewEmpty': 'This mailbox has no signature yet. Configure it under Mailboxes.',
+  'sequences.signaturePreviewNote': 'At send time the campaign mailbox assigned to each lead is used.',
 
   // Target Groups
   'targetGroups.title': 'Target Groups',
@@ -225,6 +237,12 @@ export const en = {
   'mailboxes.warmingUp': 'Warming up',
   'mailboxes.warmingUpTooltip': 'This mailbox is warming up. The current limit is lower than the configured maximum to build sender reputation.',
   'mailboxes.healthCheckNotice': 'Check mailbox email health before starting campaigns to protect deliverability.',
+  'mailboxes.signature': 'Email signature',
+  'mailboxes.editSignature': 'Edit signature',
+  'mailboxes.signatureHint': 'Appended to sequence emails when the sequence includes signatures.',
+  'mailboxes.savingSignature': 'Saving...',
+  'mailboxes.hasSignature': 'Has signature',
+  'mailboxes.noSignature': 'No signature',
 
   // Settings
   'settings.companyProfile': 'Company Profile',

@@ -88,7 +88,10 @@ export const getCompanyUsers = () => api.get('/company/users').then((r) => r.dat
 // Mailboxes
 export const getMailboxes = () => api.get('/mailboxes').then((r) => r.data)
 export const createMailbox = (data: object) => api.post('/mailboxes', data).then((r) => r.data)
-export const deleteMailbox = (id: string) => api.delete(`/mailboxes/${id}`).then((r) => r.data)
+export const updateMailbox = (id: string, data: object) =>
+  api.patch(`/mailboxes/${id}`, data).then((r) => r.data)
+export const deleteMailbox = (id: string) =>
+  api.delete(`/mailboxes/${id}`).then((r) => r.data)
 
 // Target Groups
 export const getTargetGroups = () => api.get('/target-groups').then((r) => r.data)
@@ -129,6 +132,8 @@ export const downloadLeadsTemplate = () =>
 export const getSequences = () => api.get('/sequences').then((r) => r.data)
 export const getSequence = (id: string) => api.get(`/sequences/${id}`).then((r) => r.data)
 export const createSequence = (data: object) => api.post('/sequences', data).then((r) => r.data)
+export const updateSequence = (id: string, data: object) =>
+  api.patch(`/sequences/${id}`, data).then((r) => r.data)
 export const deleteSequence = (id: string) =>
   api.delete(`/sequences/${id}`).then((r) => r.data)
 export const addStep = (sequenceId: string, data: object) =>
@@ -137,6 +142,21 @@ export const updateStep = (sequenceId: string, stepId: string, data: object) =>
   api.patch(`/sequences/${sequenceId}/steps/${stepId}`, data).then((r) => r.data)
 export const deleteStep = (sequenceId: string, stepId: string) =>
   api.delete(`/sequences/${sequenceId}/steps/${stepId}`).then((r) => r.data)
+export const uploadStepAttachment = (sequenceId: string, stepId: string, file: File) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api
+    .post(`/sequences/${sequenceId}/steps/${stepId}/attachments`, fd)
+    .then((r) => r.data)
+}
+export const deleteStepAttachment = (
+  sequenceId: string,
+  stepId: string,
+  attachmentId: string
+) =>
+  api
+    .delete(`/sequences/${sequenceId}/steps/${stepId}/attachments/${attachmentId}`)
+    .then((r) => r.data)
 
 // Campaigns
 export const getCampaigns = (params?: object) => api.get('/campaigns', { params }).then((r) => r.data)

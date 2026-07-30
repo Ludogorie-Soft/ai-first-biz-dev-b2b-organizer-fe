@@ -128,3 +128,34 @@
     @apply font-sans;
   }
 }
+
+/* Sequence email body TipTap editor */
+.sequence-body-editor .variable-highlight {
+  background: #ddd6fe;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.sequence-body-editor p.is-editor-empty:first-child::before {
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.sequence-body-editor ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+.sequence-body-editor ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+.sequence-body-editor a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+.sequence-body-editor p {
+  margin: 0.35rem 0;
+}

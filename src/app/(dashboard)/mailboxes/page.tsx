@@ -1,18 +1,19 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Info, Flame } from 'lucide-react'
+import { Plus, Trash2, Info, Flame, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { getMailboxes, createMailbox, deleteMailbox } from '@/lib/api'
+import { getMailboxes, createMailbox, updateMailbox, deleteMailbox } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { VariableEditor, normalizeBodyHtml } from '@/components/sequences/VariableEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 interface Mailbox {
   id: string
@@ -44,6 +46,7 @@ interface Mailbox {
   weekly_email_limit: number
   effective_daily_limit: number
   is_warming_up: boolean
+  signature: string | null
 }
 
 const schema = z.object({
@@ -62,6 +65,8 @@ export default function MailboxesPage() {
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [signatureMailbox, setSignatureMailbox] = useState<Mailbox | null>(null)
+  const [signatureHtml, setSignatureHtml] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.mailboxes.all,
@@ -104,6 +109,32 @@ export default function MailboxesPage() {
     },
     onError: () => toast.error(t['common.error']),
   })
+
+  const signatureMutation = useMutation({
+    mutationFn: ({ id, signature }: { id: string; signature: string | null }) =>
+      updateMailbox(id, { signature }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes.all })
+      toast.success(t['common.success'])
+      setSignatureMailbox(null)
+      setSignatureHtml('')
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  function openSignatureDialog(mb: Mailbox) {
+    setSignatureMailbox(mb)
+    setSignatureHtml(mb.signature || '')
+  }
+
+  function saveSignature() {
+    if (!signatureMailbox) return
+    const normalized = normalizeBodyHtml(signatureHtml)
+    signatureMutation.mutate({
+      id: signatureMailbox.id,
+      signature: normalized || null,
+    })
+  }
 
   return (
     <div>
@@ -190,6 +221,9 @@ export default function MailboxesPage() {
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   {t['mailboxes.createdAt']}
                 </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {t['mailboxes.signature']}
+                </TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -232,15 +266,29 @@ export default function MailboxesPage() {
                   <TableCell className="text-slate-400 text-sm">
                     {new Date(mb.created_at).toLocaleDateString()}
                   </TableCell>
+                  <TableCell className="text-sm text-slate-500">
+                    {mb.signature ? t['mailboxes.hasSignature'] : t['mailboxes.noSignature']}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-slate-400 hover:text-red-500"
-                      onClick={() => setDeleteId(mb.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-slate-700"
+                        onClick={() => openSignatureDialog(mb)}
+                        title={t['mailboxes.editSignature']}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-slate-400 hover:text-red-500"
+                        onClick={() => setDeleteId(mb.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -248,6 +296,64 @@ export default function MailboxesPage() {
           </Table>
         </div>
       )}
+
+      {/* Edit Signature Dialog */}
+      <Dialog
+        open={!!signatureMailbox}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSignatureMailbox(null)
+            setSignatureHtml('')
+          }
+        }}
+      >
+        <DialogContent
+          className={cn(
+            'flex w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0',
+            'max-h-[90vh] sm:max-w-2xl',
+          )}
+        >
+          <DialogHeader className="shrink-0 border-b px-5 py-4 pr-12">
+            <DialogTitle>
+              {t['mailboxes.editSignature']}
+              {signatureMailbox ? ` — ${signatureMailbox.email}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
+            <p className="text-xs text-slate-400">{t['mailboxes.signatureHint']}</p>
+            {signatureMailbox && (
+              <VariableEditor
+                key={signatureMailbox.id}
+                value={signatureHtml}
+                onChange={setSignatureHtml}
+                rows={8}
+              />
+            )}
+          </div>
+          <DialogFooter className="mx-0 mb-0 shrink-0 rounded-none">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setSignatureMailbox(null)
+                setSignatureHtml('')
+              }}
+            >
+              {t['common.cancel']}
+            </Button>
+            <Button
+              type="button"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              disabled={signatureMutation.isPending}
+              onClick={saveSignature}
+            >
+              {signatureMutation.isPending
+                ? t['mailboxes.savingSignature']
+                : t['common.save']}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Mailbox Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
