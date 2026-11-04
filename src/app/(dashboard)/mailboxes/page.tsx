@@ -191,6 +191,12 @@ export default function MailboxesPage() {
           >
             MXToolbox Email Health
           </a>
+        </div>
+      </div>
+
+      <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+        <p className="text-sm text-slate-700">{t['mailboxes.warmupServicesNotice']}</p>
+        <div className="mt-2 flex flex-wrap gap-3 text-sm">
           <a
             href="https://e-warmup.com"
             target="_blank"

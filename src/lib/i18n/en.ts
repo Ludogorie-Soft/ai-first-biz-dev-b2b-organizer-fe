@@ -277,6 +277,7 @@ export const en = {
   'mailboxes.friendlyWarmupStart': 'Send to friendly contacts first (holds normal campaign emails)',
   'mailboxes.friendlyWarmupSkip': 'Skip friendly contacts and allow normal campaigns',
   'mailboxes.healthCheckNotice': 'Check mailbox email health before starting campaigns to protect deliverability.',
+  'mailboxes.warmupServicesNotice': 'To build a good reputation for a new mailbox and make its emails less likely to land in Spam, you can connect it to a free warm-up service.',
   'mailboxes.signature': 'Email signature',
   'mailboxes.editSignature': 'Edit signature',
   'mailboxes.signatureHint': 'Appended to sequence emails when the sequence includes signatures.',
