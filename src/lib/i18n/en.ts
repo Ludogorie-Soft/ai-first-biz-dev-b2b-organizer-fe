@@ -84,6 +84,11 @@ export const en = {
   'campaigns.sendOnWeekendsLabel': 'Allow sending on weekends',
   'campaigns.sendOnWeekendsHint':
     'Off: emails send Mon–Fri only (Europe/Sofia business hours). On: Saturday and Sunday included.',
+  'campaigns.isWarmupLabel': 'Warm-up campaign',
+  'campaigns.isWarmupHint':
+    'For friendly contacts who agreed to reply. Emails follow business hours with gaps between sends, and completing the campaign lets its mailboxes start normal campaigns.',
+  'campaigns.warmupBadge': 'Warm-up',
+  'campaigns.friendlyWarmupBlocked': 'These mailboxes must complete a warm-up campaign first: {mailboxes}',
   'campaigns.triggerNextStep': 'Send Next Emails',
   'campaigns.triggering': 'Sending...',
   'campaigns.triggeredSuccess': 'Emails have been queued for sending',
@@ -263,6 +268,14 @@ export const en = {
   'mailboxes.weeklyLimit': 'Weekly Limit',
   'mailboxes.warmingUp': 'Warming up',
   'mailboxes.warmingUpTooltip': 'This mailbox is warming up. The current limit is lower than the configured maximum to build sender reputation.',
+  'mailboxes.friendlyWarmupLabel': 'Send to friendly contacts first',
+  'mailboxes.friendlyWarmupHint':
+    'Normal campaigns from this mailbox wait until a warm-up campaign with people who agreed to reply has completed.',
+  'mailboxes.friendlyWarmupBadge': 'Friendly contacts first',
+  'mailboxes.friendlyWarmupTooltip':
+    'Only warm-up campaigns can send from this mailbox until one completes. Normal campaign emails are waiting.',
+  'mailboxes.friendlyWarmupStart': 'Send to friendly contacts first (holds normal campaign emails)',
+  'mailboxes.friendlyWarmupSkip': 'Skip friendly contacts and allow normal campaigns',
   'mailboxes.healthCheckNotice': 'Check mailbox email health before starting campaigns to protect deliverability.',
   'mailboxes.signature': 'Email signature',
   'mailboxes.editSignature': 'Edit signature',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Info, Flame, Pencil } from 'lucide-react'
+import { Plus, Trash2, Info, Flame, Pencil, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -47,6 +47,7 @@ interface Mailbox {
   effective_daily_limit: number
   is_warming_up: boolean
   signature: string | null
+  friendly_warmup_pending: boolean
 }
 
 const schema = z.object({
@@ -56,6 +57,7 @@ const schema = z.object({
   imap_user: z.string().min(1),
   imap_password: z.string().min(1),
   tls: z.boolean(),
+  friendly_warmup: z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -84,10 +86,11 @@ export default function MailboxesPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { tls: true, imap_port: 993 },
+    defaultValues: { tls: true, imap_port: 993, friendly_warmup: true },
   })
 
   const tlsValue = watch('tls')
+  const friendlyWarmupValue = watch('friendly_warmup')
 
   const createMutation = useMutation({
     mutationFn: createMailbox,
@@ -118,6 +121,16 @@ export default function MailboxesPage() {
       toast.success(t['common.success'])
       setSignatureMailbox(null)
       setSignatureHtml('')
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  const friendlyWarmupMutation = useMutation({
+    mutationFn: ({ id, pending }: { id: string; pending: boolean }) =>
+      updateMailbox(id, { friendly_warmup_pending: pending }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes.all })
+      toast.success(t['common.success'])
     },
     onError: () => toast.error(t['common.error']),
   })
@@ -178,6 +191,22 @@ export default function MailboxesPage() {
           >
             MXToolbox Email Health
           </a>
+          <a
+            href="https://e-warmup.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            E-Warmup
+          </a>
+          <a
+            href="https://www.trulyinbox.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          >
+            TrulyInbox
+          </a>
         </div>
       </div>
 
@@ -232,14 +261,25 @@ export default function MailboxesPage() {
                 <TableRow key={mb.id}>
                   <TableCell className="font-medium text-slate-900 text-sm">{mb.email}</TableCell>
                   <TableCell>
-                    {mb.ses_status === 'pending' ? (
-                      <StatusBadge status="draft" label={t['mailboxes.sesPending']} />
-                    ) : (
-                      <StatusBadge
-                        status={mb.is_paused ? 'paused' : 'active'}
-                        label={mb.is_paused ? t['mailboxes.paused'] : t['mailboxes.active']}
-                      />
-                    )}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {mb.ses_status === 'pending' ? (
+                        <StatusBadge status="draft" label={t['mailboxes.sesPending']} />
+                      ) : (
+                        <StatusBadge
+                          status={mb.is_paused ? 'paused' : 'active'}
+                          label={mb.is_paused ? t['mailboxes.paused'] : t['mailboxes.active']}
+                        />
+                      )}
+                      {mb.friendly_warmup_pending && (
+                        <span
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"
+                          title={t['mailboxes.friendlyWarmupTooltip']}
+                        >
+                          <Users className="h-3 w-3" />
+                          {t['mailboxes.friendlyWarmupBadge']}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm">
                     <div className="flex items-center gap-1.5">
@@ -271,6 +311,28 @@ export default function MailboxesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'hover:text-slate-700',
+                          mb.friendly_warmup_pending ? 'text-amber-600' : 'text-slate-400',
+                        )}
+                        disabled={friendlyWarmupMutation.isPending}
+                        onClick={() =>
+                          friendlyWarmupMutation.mutate({
+                            id: mb.id,
+                            pending: !mb.friendly_warmup_pending,
+                          })
+                        }
+                        title={
+                          mb.friendly_warmup_pending
+                            ? t['mailboxes.friendlyWarmupSkip']
+                            : t['mailboxes.friendlyWarmupStart']
+                        }
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -372,6 +434,7 @@ export default function MailboxesPage() {
                   password: data.imap_password,
                   tls: data.tls,
                 },
+                friendly_warmup: data.friendly_warmup,
               })
             )}
             className="space-y-4"
@@ -439,6 +502,21 @@ export default function MailboxesPage() {
                 className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
               <Label htmlFor="tls" className="cursor-pointer">{t['mailboxes.tls']}</Label>
+            </div>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="friendly_warmup"
+                checked={friendlyWarmupValue}
+                onChange={(e) => setValue('friendly_warmup', e.target.checked)}
+                className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div className="space-y-0.5">
+                <Label htmlFor="friendly_warmup" className="cursor-pointer">
+                  {t['mailboxes.friendlyWarmupLabel']}
+                </Label>
+                <p className="text-xs text-slate-500">{t['mailboxes.friendlyWarmupHint']}</p>
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>

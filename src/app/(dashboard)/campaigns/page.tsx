@@ -26,6 +26,7 @@ interface Campaign {
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
   send_on_weekends?: boolean
+  is_warmup?: boolean
   target_group?: { name: string }
   campaign_sequences?: { sequence: { name: string } | null }[]
   created_at: string
@@ -177,6 +178,11 @@ export default function CampaignsPage() {
                         ? t['campaigns.sendOnWeekendsOn']
                         : t['campaigns.sendOnWeekendsOff']}
                     </Badge>
+                    {campaign.is_warmup && (
+                      <Badge variant="outline" className="ml-1.5 font-normal border-amber-200 text-amber-700">
+                        {t['campaigns.warmupBadge']}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-slate-400 text-sm whitespace-nowrap">
                     {new Date(campaign.created_at).toLocaleDateString()}

@@ -84,6 +84,11 @@ export const bg = {
   'campaigns.sendOnWeekendsLabel': 'Позволи изпращане в почивните дни',
   'campaigns.sendOnWeekendsHint':
     'Изкл.: имейли само пн–пт (работно време Europe/Sofia). Вкл.: и събота/неделя.',
+  'campaigns.isWarmupLabel': 'Кампания за загряване',
+  'campaigns.isWarmupHint':
+    'За приятелски контакти, които са се съгласили да отговорят. Имейлите се изпращат в работно време с паузи между тях, а след приключване пощенските кутии могат да започнат обикновени кампании.',
+  'campaigns.warmupBadge': 'Загряване',
+  'campaigns.friendlyWarmupBlocked': 'Тези пощенски кутии първо трябва да завършат кампания за загряване: {mailboxes}',
   'campaigns.triggerNextStep': 'Изпрати следващите имейли',
   'campaigns.triggering': 'Изпращане...',
   'campaigns.triggeredSuccess': 'Имейлите са поставени в опашката за изпращане',
@@ -263,6 +268,14 @@ export const bg = {
   'mailboxes.weeklyLimit': 'Седмичен лимит',
   'mailboxes.warmingUp': 'Загрява',
   'mailboxes.warmingUpTooltip': 'Тази пощенска кутия е в процес на загряване. Текущият лимит е по-нисък от конфигурирания максимум за изграждане на репутация на изпращача.',
+  'mailboxes.friendlyWarmupLabel': 'Първо изпращай до приятелски контакти',
+  'mailboxes.friendlyWarmupHint':
+    'Обикновените кампании от тази пощенска кутия изчакват, докато приключи кампания за загряване с хора, които са се съгласили да отговорят.',
+  'mailboxes.friendlyWarmupBadge': 'Първо приятелски контакти',
+  'mailboxes.friendlyWarmupTooltip':
+    'От тази пощенска кутия могат да изпращат само кампании за загряване, докато една от тях приключи. Имейлите от обикновените кампании изчакват.',
+  'mailboxes.friendlyWarmupStart': 'Първо изпращай до приятелски контакти (задържа имейлите от обикновените кампании)',
+  'mailboxes.friendlyWarmupSkip': 'Пропусни приятелските контакти и разреши обикновените кампании',
   'mailboxes.healthCheckNotice': 'Преди да започнете кампания с тези имейли е важно да проверите качеството им, за да намалите вероятността да попадат в Спам.',
   'mailboxes.signature': 'Имейл подпис',
   'mailboxes.editSignature': 'Редактирай подпис',

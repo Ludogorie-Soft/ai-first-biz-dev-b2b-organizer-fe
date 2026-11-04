@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { createCampaign, getTargetGroups, getSequences, getMailboxes } from '@/lib/api'
+import { friendlyWarmupErrorMessage } from '@/lib/friendlyWarmup'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -33,13 +34,14 @@ const schema = z.object({
   sequence_ids: z.array(z.string()).min(1),
   mailbox_ids: z.array(z.string()).min(1),
   send_on_weekends: z.boolean(),
+  is_warmup: z.boolean(),
 })
 
 type FormData = z.infer<typeof schema>
 
 interface TargetGroup { id: string; name: string }
 interface Sequence { id: string; name: string }
-interface Mailbox { id: string; email: string; status: string }
+interface Mailbox { id: string; email: string; status: string; friendly_warmup_pending?: boolean }
 
 export default function NewCampaignPage() {
   const t = useTranslations()
@@ -61,11 +63,12 @@ export default function NewCampaignPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { mailbox_ids: [], sequence_ids: [], send_on_weekends: false },
+    defaultValues: { mailbox_ids: [], sequence_ids: [], send_on_weekends: false, is_warmup: false },
   })
 
   const selectedMailboxIds = watch('mailbox_ids')
   const sendOnWeekends = watch('send_on_weekends')
+  const isWarmup = watch('is_warmup')
   const selectedTargetGroupId = watch('target_group_id')
   const selectedSequenceIds = watch('sequence_ids')
 
@@ -75,7 +78,7 @@ export default function NewCampaignPage() {
       toast.success(t['common.success'])
       router.push('/campaigns')
     },
-    onError: () => toast.error(t['common.error']),
+    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? t['common.error']),
   })
 
   function toggleMailbox(id: string) {
@@ -175,6 +178,11 @@ export default function NewCampaignPage() {
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                       />
                       <span className="text-sm text-slate-700">{mb.email}</span>
+                      {mb.friendly_warmup_pending && (
+                        <span className="text-xs text-amber-700">
+                          {t['mailboxes.friendlyWarmupBadge']}
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>
@@ -197,6 +205,20 @@ export default function NewCampaignPage() {
                 id="send_on_weekends"
                 checked={sendOnWeekends ?? false}
                 onCheckedChange={(v) => setValue('send_on_weekends', v, { shouldValidate: true })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-md border border-slate-200 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="is_warmup" className="text-slate-900">
+                  {t['campaigns.isWarmupLabel']}
+                </Label>
+                <p className="text-xs text-slate-500">{t['campaigns.isWarmupHint']}</p>
+              </div>
+              <Switch
+                id="is_warmup"
+                checked={isWarmup ?? false}
+                onCheckedChange={(v) => setValue('is_warmup', v, { shouldValidate: true })}
               />
             </div>
 

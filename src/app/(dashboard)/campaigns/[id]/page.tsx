@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from 'react'
 import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads, previewLeads, importLeads, updateLead, downloadLeadsTemplate, triggerNextStep, getCampaignEmailLogs } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
+import { friendlyWarmupErrorMessage } from '@/lib/friendlyWarmup'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageLoader } from '@/components/shared/LoadingSpinner'
@@ -46,6 +47,7 @@ interface Campaign {
   name: string
   status: 'active' | 'paused' | 'completed' | 'draft' | 'pending_mailbox_approval'
   send_on_weekends?: boolean
+  is_warmup?: boolean
   campaign_sequences?: { sequence_id: string }[]
 }
 
@@ -181,7 +183,7 @@ export default function CampaignDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.single(id) })
       toast.success(t['common.success'])
     },
-    onError: () => toast.error(t['common.error']),
+    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? t['common.error']),
   })
 
   const deleteMutation = useMutation({
@@ -318,6 +320,11 @@ export default function CampaignDetailPage() {
           <div className="flex items-center gap-3">
             {campaign && (
               <StatusBadge status={badgeStatus} label={statusLabel(badgeStatus)} />
+            )}
+            {campaign?.is_warmup && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                {t['campaigns.warmupBadge']}
+              </span>
             )}
             <Button
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
