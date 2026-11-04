@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { ArrowLeft } from 'lucide-react'
 import { createCampaign, getTargetGroups, getSequences, getMailboxes } from '@/lib/api'
 import { friendlyWarmupErrorMessage } from '@/lib/friendlyWarmup'
+import { emptySequenceErrorMessage } from '@/lib/sequenceSteps'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -78,7 +79,7 @@ export default function NewCampaignPage() {
       toast.success(t['common.success'])
       router.push('/campaigns')
     },
-    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? t['common.error']),
+    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? emptySequenceErrorMessage(err, t) ?? t['common.error']),
   })
 
   function toggleMailbox(id: string) {

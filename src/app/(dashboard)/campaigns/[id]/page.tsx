@@ -10,6 +10,7 @@ import { getCampaign, getCampaignStats, updateCampaign, deleteCampaign, getLeads
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { friendlyWarmupErrorMessage } from '@/lib/friendlyWarmup'
+import { emptySequenceErrorMessage } from '@/lib/sequenceSteps'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PageLoader } from '@/components/shared/LoadingSpinner'
@@ -183,7 +184,7 @@ export default function CampaignDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.single(id) })
       toast.success(t['common.success'])
     },
-    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? t['common.error']),
+    onError: (err: unknown) => toast.error(friendlyWarmupErrorMessage(err, t) ?? emptySequenceErrorMessage(err, t) ?? t['common.error']),
   })
 
   const deleteMutation = useMutation({
@@ -224,7 +225,7 @@ export default function CampaignDetailPage() {
 
   const triggerNextStepMutation = useMutation({
     mutationFn: (force: boolean) => triggerNextStep(id, force),
-    onSuccess: (data: { needs_confirmation: boolean; days_remaining?: number; delay_days?: number; affected_leads?: number; enqueued?: number }) => {
+    onSuccess: (data: { needs_confirmation: boolean; days_remaining?: number; delay_days?: number; affected_leads?: number; enqueued?: number; reason?: string; first_send_at?: string }) => {
       if (data.needs_confirmation) {
         setTriggerConfirmData({
           days_remaining: data.days_remaining ?? 0,
@@ -233,9 +234,21 @@ export default function CampaignDetailPage() {
         })
         setShowTriggerConfirm(true)
       } else if ((data.enqueued ?? 0) === 0) {
-        toast.info(t['campaigns.triggerNoLeads'])
+        toast.info(
+          t[
+            data.reason === 'no_steps'
+              ? 'campaigns.triggerNoSteps'
+              : data.reason === 'sequence_complete'
+                ? 'campaigns.triggerSequenceComplete'
+                : 'campaigns.triggerNoLeads'
+          ],
+        )
       } else {
-        toast.success(t['campaigns.triggeredSuccess'])
+        toast.success(
+          data.first_send_at
+            ? t['campaigns.triggerScheduled'].replace('{time}', new Date(data.first_send_at).toLocaleString())
+            : t['campaigns.triggeredSuccess'],
+        )
         queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.stats(id) })
       }
     },
