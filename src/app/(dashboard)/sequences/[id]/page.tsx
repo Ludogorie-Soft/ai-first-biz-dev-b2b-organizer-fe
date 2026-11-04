@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Pencil, Paperclip } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Pencil, Paperclip, Palette, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffect, useRef, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
@@ -29,6 +29,12 @@ import {
   stripHtml,
   type VariableEditorHandle,
 } from '@/components/sequences/VariableEditor'
+import {
+  StyledHtmlEditor,
+  type StyledHtmlEditorHandle,
+} from '@/components/sequences/StyledHtmlEditor'
+import { StyledTemplateCard } from '@/components/sequences/StyledTemplateCard'
+import { VariableChips } from '@/components/sequences/VariableChips'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,7 +49,6 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
-const VARIABLES = ['{{first_name}}', '{{last_name}}', '{{email}}', '{{full_name}}', '{{company_name}}', '{{position}}'] as const
 const MAX_ATTACHMENTS = 3
 const ACCEPT_TYPES = '.pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.txt'
 
@@ -61,6 +66,8 @@ interface Step {
   body: string
   delay_days: number
   step_order: number
+  use_template?: boolean
+  styled_html?: string | null
   sequence_step_attachments?: StepAttachment[]
 }
 
@@ -70,14 +77,38 @@ interface MailboxOption {
   signature: string | null
 }
 
-const stepSchema = z.object({
-  subject: z.string().min(1),
-  body: z.string().min(1),
-  delay_days: z.number().min(0),
-  step_order: z.number().min(1),
-})
+const stepSchema = z
+  .object({
+    subject: z.string().min(1),
+    body: z.string().optional(),
+    delay_days: z.number().min(0),
+    step_order: z.number().min(1),
+    use_template: z.boolean(),
+    styled_html: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.use_template) {
+      if (!data.styled_html) ctx.addIssue({ code: 'custom', path: ['styled_html'], message: 'Required' })
+    } else if (!data.body) {
+      ctx.addIssue({ code: 'custom', path: ['body'], message: 'Required' })
+    }
+  })
 
 type StepFormData = z.infer<typeof stepSchema>
+
+/** A styled step only sends its styled copy, so that is what the API should validate. */
+function toStepPayload({ body, styled_html, ...rest }: StepFormData) {
+  return rest.use_template
+    ? { ...rest, styled_html, ...(body ? { body } : {}) }
+    : { ...rest, body }
+}
+
+function stepPreviewText(step: Step): string {
+  if (step.use_template && step.styled_html) {
+    return stripHtml(step.styled_html.replace(/<head\b[^>]*>[\s\S]*?<\/head\s*>/i, ''))
+  }
+  return stripHtml(step.body)
+}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
@@ -127,6 +158,8 @@ export default function SequenceDetailPage() {
 
   const subjectInputRef = useRef<HTMLInputElement>(null)
   const bodyEditorRef = useRef<VariableEditorHandle>(null)
+  const styledEditorRef = useRef<StyledHtmlEditorHandle>(null)
+  const [styledEditorKey, setStyledEditorKey] = useState(0)
 
   const {
     register,
@@ -135,8 +168,33 @@ export default function SequenceDetailPage() {
     control,
     getValues,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<StepFormData>({ resolver: zodResolver(stepSchema) })
+
+  const templateHtml =
+    (data as { template_html?: string | null } | undefined)?.template_html ?? null
+  const templateFileName =
+    (data as { template_file_name?: string | null } | undefined)?.template_file_name ?? null
+  const useTemplate = watch('use_template') === true
+
+  function loadStyledHtml(html: string) {
+    setValue('styled_html', html, { shouldValidate: true })
+    setStyledEditorKey((key) => key + 1)
+  }
+
+  function onToggleTemplate(checked: boolean) {
+    setValue('use_template', checked, { shouldValidate: true })
+    if (checked && !getValues('styled_html')) {
+      loadStyledHtml(editingStep?.styled_html || templateHtml || '')
+    }
+  }
+
+  function resetToTemplate() {
+    if (templateHtml && window.confirm(t['sequences.resetToTemplateConfirm'])) {
+      loadStyledHtml(templateHtml)
+    }
+  }
 
   function insertVariable(variable: string) {
     const active = document.activeElement
@@ -149,6 +207,10 @@ export default function SequenceDetailPage() {
       requestAnimationFrame(() => {
         if (input) input.selectionStart = input.selectionEnd = start + variable.length
       })
+    } else if (useTemplate) {
+      if (!styledEditorRef.current?.insertVariable(variable)) {
+        toast.info(t['sequences.templateClickFirst'])
+      }
     } else {
       bodyEditorRef.current?.insertVariable(variable)
     }
@@ -158,7 +220,12 @@ export default function SequenceDetailPage() {
     setEditingStep(null)
     setPendingFiles([])
     const nextStepOrder = steps.length === 0 ? 1 : Math.max(...steps.map((s) => s.step_order)) + 1
-    reset({ step_order: nextStepOrder, delay_days: steps.length === 0 ? 0 : 1 })
+    reset({
+      step_order: nextStepOrder,
+      delay_days: steps.length === 0 ? 0 : 1,
+      use_template: false,
+    })
+    setStyledEditorKey((key) => key + 1)
     setDialogOpen(true)
   }
 
@@ -170,7 +237,10 @@ export default function SequenceDetailPage() {
       body: step.body,
       delay_days: step.delay_days,
       step_order: step.step_order,
+      use_template: step.use_template === true,
+      styled_html: step.styled_html ?? undefined,
     })
+    setStyledEditorKey((key) => key + 1)
     setDialogOpen(true)
   }
 
@@ -197,7 +267,7 @@ export default function SequenceDetailPage() {
 
   const addMutation = useMutation({
     mutationFn: async (formData: StepFormData) => {
-      const created = await addStep(id, formData) as { id: string }
+      const created = await addStep(id, toStepPayload(formData)) as { id: string }
       if (pendingFiles.length > 0) {
         setUploading(true)
         try {
@@ -219,7 +289,7 @@ export default function SequenceDetailPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (formData: StepFormData) => {
-      const updated = await updateStep(id, editingStep!.id, formData)
+      const updated = await updateStep(id, editingStep!.id, toStepPayload(formData))
       if (pendingFiles.length > 0) {
         setUploading(true)
         try {
@@ -320,6 +390,12 @@ export default function SequenceDetailPage() {
         {t['sequences.includeSignatureHint']}
       </p>
 
+      <StyledTemplateCard
+        sequenceId={id}
+        templateHtml={templateHtml}
+        fileName={templateFileName}
+      />
+
       {sortedSteps.length === 0 ? (
         <EmptyState
           title={t['sequences.noSteps']}
@@ -351,9 +427,15 @@ export default function SequenceDetailPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-slate-900 truncate">{step.subject}</p>
                         <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
-                          {stripHtml(step.body)}
+                          {stepPreviewText(step)}
                         </p>
                         <div className="flex flex-wrap items-center gap-3 mt-2">
+                          {step.use_template && (
+                            <p className="text-xs text-indigo-600 inline-flex items-center gap-1">
+                              <Palette className="h-3 w-3" />
+                              {t['sequences.styledBadge']}
+                            </p>
+                          )}
                           <p className="text-xs text-slate-400">
                             {t['sequences.waitDays']}: {step.delay_days} {t['sequences.days']}
                           </p>
@@ -422,7 +504,7 @@ export default function SequenceDetailPage() {
             className="flex min-h-0 flex-1 flex-col"
           >
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-              <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
+              <div className={cn('grid gap-5 lg:gap-6', !useTemplate && 'lg:grid-cols-2')}>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
@@ -470,21 +552,7 @@ export default function SequenceDetailPage() {
 
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-slate-500">{t['sequences.variables']}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {VARIABLES.map((variable) => (
-                        <button
-                          key={variable}
-                          type="button"
-                          draggable
-                          onDragStart={(e) => e.dataTransfer.setData('text/plain', variable)}
-                          onClick={() => insertVariable(variable)}
-                          className="cursor-grab active:cursor-grabbing px-2 py-0.5 rounded text-xs font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors select-none"
-                          title="Click to insert · Drag to field"
-                        >
-                          {variable}
-                        </button>
-                      ))}
-                    </div>
+                    <VariableChips onInsert={insertVariable} />
                     <p className="text-xs text-slate-400">{t['sequences.variablesHint']}</p>
                   </div>
 
@@ -566,20 +634,61 @@ export default function SequenceDetailPage() {
 
                 <div className="space-y-1.5 lg:min-h-0">
                   <Label>{t['sequences.body']}</Label>
-                  <Controller
-                    name="body"
-                    control={control}
-                    render={({ field }) => (
-                      <VariableEditor
-                        key={editingStep?.id ?? 'new-step'}
-                        ref={bodyEditorRef}
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        hasError={!!errors.body}
-                        rows={12}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-1">
+                    <label
+                      className={cn(
+                        'flex items-center gap-2 text-sm select-none',
+                        templateHtml || editingStep?.styled_html
+                          ? 'cursor-pointer text-slate-700'
+                          : 'cursor-not-allowed text-slate-400',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-indigo-600"
+                        checked={useTemplate}
+                        disabled={!templateHtml && !editingStep?.styled_html}
+                        onChange={(e) => onToggleTemplate(e.target.checked)}
                       />
+                      {t['sequences.useTemplate']}
+                    </label>
+                    {useTemplate && templateHtml && (
+                      <Button type="button" variant="ghost" size="sm" onClick={resetToTemplate}>
+                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                        {t['sequences.resetToTemplate']}
+                      </Button>
                     )}
-                  />
+                  </div>
+                  <p className="pb-1 text-xs text-slate-400">
+                    {useTemplate
+                      ? t['sequences.useTemplateHint']
+                      : !templateHtml && !editingStep?.styled_html
+                        ? t['sequences.useTemplateUnavailable']
+                        : null}
+                  </p>
+                  {useTemplate ? (
+                    <StyledHtmlEditor
+                      key={styledEditorKey}
+                      ref={styledEditorRef}
+                      initialHtml={getValues('styled_html') || ''}
+                      onChange={(html) => setValue('styled_html', html, { shouldValidate: true })}
+                    />
+                  ) : (
+                    <Controller
+                      name="body"
+                      control={control}
+                      render={({ field }) => (
+                        <VariableEditor
+                          key={editingStep?.id ?? 'new-step'}
+                          ref={bodyEditorRef}
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          hasError={!!errors.body}
+                          rows={12}
+                        />
+                      )}
+                    />
+                  )}
 
                   {includeSignature && (
                     <div className="mt-4 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
