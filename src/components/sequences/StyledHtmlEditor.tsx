@@ -67,10 +67,11 @@ interface Props {
   initialHtml: string
   onChange: (html: string) => void
   height?: number
+  onFocus?: () => void
 }
 
 export const StyledHtmlEditor = forwardRef<StyledHtmlEditorHandle, Props>(
-  ({ initialHtml, onChange, height = 560 }, ref) => {
+  ({ initialHtml, onChange, height = 560, onFocus }, ref) => {
     const t = useTranslations()
     const frameRef = useRef<HTMLIFrameElement>(null)
     const savedRange = useRef<Range | null>(null)
@@ -167,6 +168,7 @@ export const StyledHtmlEditor = forwardRef<StyledHtmlEditorHandle, Props>(
           ref={frameRef}
           srcDoc={srcDoc}
           onLoad={handleLoad}
+          onFocus={onFocus}
           title={t['sequences.templateEditorTitle']}
           style={{ height }}
           className="w-full rounded-lg border border-input bg-white"

@@ -152,10 +152,15 @@ export const uploadStepAttachment = (sequenceId: string, stepId: string, file: F
 export const uploadSequenceTemplate = (sequenceId: string, file: File) => {
   const fd = new FormData()
   fd.append('file', file)
-  return api.post(`/sequences/${sequenceId}/template`, fd).then((r) => r.data)
+  return api.post(`/sequences/${sequenceId}/templates`, fd).then((r) => r.data)
 }
-export const deleteSequenceTemplate = (sequenceId: string) =>
-  api.delete(`/sequences/${sequenceId}/template`).then((r) => r.data)
+export const updateSequenceTemplate = (
+  sequenceId: string,
+  templateId: string,
+  data: { name?: string; html?: string },
+) => api.patch(`/sequences/${sequenceId}/templates/${templateId}`, data).then((r) => r.data)
+export const deleteSequenceTemplate = (sequenceId: string, templateId: string) =>
+  api.delete(`/sequences/${sequenceId}/templates/${templateId}`).then((r) => r.data)
 export const deleteStepAttachment = (
   sequenceId: string,
   stepId: string,

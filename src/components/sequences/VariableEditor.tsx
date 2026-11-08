@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useEffect, useImperativeHandle } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -102,10 +102,14 @@ interface Props {
   onChange: (value: string) => void
   hasError?: boolean
   rows?: number
+  onFocus?: () => void
 }
 
 export const VariableEditor = forwardRef<VariableEditorHandle, Props>(
-  ({ value, onChange, hasError, rows = 6 }, ref) => {
+  ({ value, onChange, hasError, rows = 6, onFocus }, ref) => {
+    const onFocusRef = useRef(onFocus)
+    onFocusRef.current = onFocus
+
     const editor = useEditor({
       immediatelyRender: false,
       extensions: [
@@ -155,6 +159,15 @@ export const VariableEditor = forwardRef<VariableEditorHandle, Props>(
         onChange(normalizeBodyHtml(ed.getHTML()))
       },
     })
+
+    useEffect(() => {
+      if (!editor) return
+      const handleFocus = () => onFocusRef.current?.()
+      editor.on('focus', handleFocus)
+      return () => {
+        editor.off('focus', handleFocus)
+      }
+    }, [editor])
 
     useImperativeHandle(ref, () => ({
       insertVariable(variable: string) {

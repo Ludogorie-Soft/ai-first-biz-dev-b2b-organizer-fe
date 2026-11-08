@@ -33,13 +33,20 @@ import {
   StyledHtmlEditor,
   type StyledHtmlEditorHandle,
 } from '@/components/sequences/StyledHtmlEditor'
-import { StyledTemplateCard } from '@/components/sequences/StyledTemplateCard'
-import { VariableChips } from '@/components/sequences/VariableChips'
+import { StyledTemplateCard, type SequenceTemplate } from '@/components/sequences/StyledTemplateCard'
+import { VariableChips, VariableText } from '@/components/sequences/VariableChips'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -67,6 +74,7 @@ interface Step {
   delay_days: number
   step_order: number
   use_template?: boolean
+  template_id?: string | null
   styled_html?: string | null
   sequence_step_attachments?: StepAttachment[]
 }
@@ -85,6 +93,7 @@ const stepSchema = z
     step_order: z.number().min(1),
     use_template: z.boolean(),
     styled_html: z.string().optional(),
+    template_id: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.use_template) {
@@ -97,10 +106,14 @@ const stepSchema = z
 type StepFormData = z.infer<typeof stepSchema>
 
 /** A styled step only sends its styled copy, so that is what the API should validate. */
-function toStepPayload({ body, styled_html, ...rest }: StepFormData) {
+function toStepPayload(
+  { body, styled_html, template_id, ...rest }: StepFormData,
+  templates: { id: string }[],
+) {
+  const templateId = templates.some((item) => item.id === template_id) ? template_id : null
   return rest.use_template
-    ? { ...rest, styled_html, ...(body ? { body } : {}) }
-    : { ...rest, body }
+    ? { ...rest, template_id: templateId, styled_html, ...(body ? { body } : {}) }
+    : { ...rest, template_id: null, body }
 }
 
 function stepPreviewText(step: Step): string {
@@ -108,6 +121,22 @@ function stepPreviewText(step: Step): string {
     return stripHtml(step.styled_html.replace(/<head\b[^>]*>[\s\S]*?<\/head\s*>/i, ''))
   }
   return stripHtml(step.body)
+}
+
+function caretIndexFromPoint(input: HTMLInputElement, clientX: number, clientY: number): number {
+  const doc = input.ownerDocument as Document & {
+    caretRangeFromPoint?: (x: number, y: number) => Range | null
+    caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null
+  }
+  const range = doc.caretRangeFromPoint?.(clientX, clientY)
+  if (range && (range.startContainer === input || input.contains(range.startContainer))) {
+    return range.startOffset
+  }
+  const pos = doc.caretPositionFromPoint?.(clientX, clientY)
+  if (pos && (pos.offsetNode === input || input.contains(pos.offsetNode))) {
+    return pos.offset
+  }
+  return input.selectionStart ?? input.value.length
 }
 
 function formatBytes(bytes: number): string {
@@ -157,6 +186,9 @@ export default function SequenceDetailPage() {
   const previewSignature = previewMailbox?.signature?.trim() || ''
 
   const subjectInputRef = useRef<HTMLInputElement>(null)
+  const subjectCaretRef = useRef({ start: 0, end: 0 })
+  // Variable chips blur the field before their click handler runs.
+  const insertTargetRef = useRef<'subject' | 'editor'>('editor')
   const bodyEditorRef = useRef<VariableEditorHandle>(null)
   const styledEditorRef = useRef<StyledHtmlEditorHandle>(null)
   const [styledEditorKey, setStyledEditorKey] = useState(0)
@@ -172,11 +204,22 @@ export default function SequenceDetailPage() {
     formState: { errors },
   } = useForm<StepFormData>({ resolver: zodResolver(stepSchema) })
 
-  const templateHtml =
-    (data as { template_html?: string | null } | undefined)?.template_html ?? null
-  const templateFileName =
-    (data as { template_file_name?: string | null } | undefined)?.template_file_name ?? null
+  const subjectField = register('subject')
+
+  const templates: SequenceTemplate[] = [
+    ...((data as { sequence_templates?: SequenceTemplate[] } | undefined)?.sequence_templates ?? []),
+  ].sort(
+    (a, b) =>
+      (a.created_at || '').localeCompare(b.created_at || '') || a.name.localeCompare(b.name),
+  )
   const useTemplate = watch('use_template') === true
+  const selectedTemplateId = watch('template_id')
+  const knownTemplateId = templates.some((item) => item.id === selectedTemplateId)
+    ? selectedTemplateId
+    : undefined
+  const selectedTemplate = templates.find((item) => item.id === knownTemplateId)
+  const showStyledEditor =
+    Boolean(knownTemplateId) || Boolean(watch('styled_html')) || templates.length === 0
 
   function loadStyledHtml(html: string) {
     setValue('styled_html', html, { shouldValidate: true })
@@ -185,29 +228,71 @@ export default function SequenceDetailPage() {
 
   function onToggleTemplate(checked: boolean) {
     setValue('use_template', checked, { shouldValidate: true })
-    if (checked && !getValues('styled_html')) {
-      loadStyledHtml(editingStep?.styled_html || templateHtml || '')
+    if (!checked) return
+    const current = templates.find((item) => item.id === getValues('template_id'))
+    const chosen = current || (templates.length === 1 ? templates[0] : undefined)
+    if (chosen && !current) setValue('template_id', chosen.id, { shouldValidate: true })
+    if (!getValues('styled_html')) {
+      const html = chosen?.html || editingStep?.styled_html || ''
+      if (html) loadStyledHtml(html)
     }
+  }
+
+  function chooseTemplate(templateId: string) {
+    const template = templates.find((item) => item.id === templateId)
+    if (!template || template.id === getValues('template_id')) return
+    const current = getValues('styled_html') || ''
+    const previous = templates.find((item) => item.id === getValues('template_id'))
+    const unchanged = !current || (previous ? current === previous.html : false)
+    if (!unchanged && current !== template.html && !window.confirm(t['sequences.switchTemplateConfirm'])) {
+      return
+    }
+    setValue('template_id', template.id, { shouldValidate: true })
+    loadStyledHtml(template.html)
   }
 
   function resetToTemplate() {
-    if (templateHtml && window.confirm(t['sequences.resetToTemplateConfirm'])) {
-      loadStyledHtml(templateHtml)
+    if (selectedTemplate && window.confirm(t['sequences.resetToTemplateConfirm'])) {
+      loadStyledHtml(selectedTemplate.html)
     }
   }
 
-  function insertVariable(variable: string) {
-    const active = document.activeElement
-    if (active === subjectInputRef.current) {
+  function rememberSubjectCaret(input: HTMLInputElement) {
+    subjectCaretRef.current = {
+      start: input.selectionStart ?? input.value.length,
+      end: input.selectionEnd ?? input.value.length,
+    }
+  }
+
+  function focusEditorTarget() {
+    insertTargetRef.current = 'editor'
+  }
+
+  function insertIntoSubject(variable: string, start: number, end: number) {
+    const current = getValues('subject') || ''
+    const safeStart = Math.max(0, Math.min(start, current.length))
+    const safeEnd = Math.max(safeStart, Math.min(end, current.length))
+    const next = current.slice(0, safeStart) + variable + current.slice(safeEnd)
+    const caret = safeStart + variable.length
+    subjectCaretRef.current = { start: caret, end: caret }
+    insertTargetRef.current = 'subject'
+    setValue('subject', next, { shouldValidate: true, shouldDirty: true })
+    requestAnimationFrame(() => {
       const input = subjectInputRef.current
-      const start = input?.selectionStart ?? (getValues('subject') || '').length
-      const end = input?.selectionEnd ?? start
-      const current = getValues('subject') || ''
-      setValue('subject', current.slice(0, start) + variable + current.slice(end), { shouldValidate: true })
-      requestAnimationFrame(() => {
-        if (input) input.selectionStart = input.selectionEnd = start + variable.length
-      })
-    } else if (useTemplate) {
+      if (!input) return
+      input.focus()
+      input.setSelectionRange(caret, caret)
+      subjectCaretRef.current = { start: caret, end: caret }
+    })
+  }
+
+  function insertVariable(variable: string) {
+    if (insertTargetRef.current === 'subject') {
+      const { start, end } = subjectCaretRef.current
+      insertIntoSubject(variable, start, end)
+      return
+    }
+    if (useTemplate) {
       if (!styledEditorRef.current?.insertVariable(variable)) {
         toast.info(t['sequences.templateClickFirst'])
       }
@@ -219,6 +304,8 @@ export default function SequenceDetailPage() {
   function openAddDialog() {
     setEditingStep(null)
     setPendingFiles([])
+    insertTargetRef.current = 'editor'
+    subjectCaretRef.current = { start: 0, end: 0 }
     const nextStepOrder = steps.length === 0 ? 1 : Math.max(...steps.map((s) => s.step_order)) + 1
     reset({
       step_order: nextStepOrder,
@@ -232,6 +319,8 @@ export default function SequenceDetailPage() {
   function openEditDialog(step: Step) {
     setEditingStep(step)
     setPendingFiles([])
+    insertTargetRef.current = 'editor'
+    subjectCaretRef.current = { start: step.subject.length, end: step.subject.length }
     reset({
       subject: step.subject,
       body: step.body,
@@ -239,6 +328,7 @@ export default function SequenceDetailPage() {
       step_order: step.step_order,
       use_template: step.use_template === true,
       styled_html: step.styled_html ?? undefined,
+      template_id: step.template_id ?? undefined,
     })
     setStyledEditorKey((key) => key + 1)
     setDialogOpen(true)
@@ -267,7 +357,7 @@ export default function SequenceDetailPage() {
 
   const addMutation = useMutation({
     mutationFn: async (formData: StepFormData) => {
-      const created = await addStep(id, toStepPayload(formData)) as { id: string }
+      const created = await addStep(id, toStepPayload(formData, templates)) as { id: string }
       if (pendingFiles.length > 0) {
         setUploading(true)
         try {
@@ -289,7 +379,7 @@ export default function SequenceDetailPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (formData: StepFormData) => {
-      const updated = await updateStep(id, editingStep!.id, toStepPayload(formData))
+      const updated = await updateStep(id, editingStep!.id, toStepPayload(formData, templates))
       if (pendingFiles.length > 0) {
         setUploading(true)
         try {
@@ -392,8 +482,9 @@ export default function SequenceDetailPage() {
 
       <StyledTemplateCard
         sequenceId={id}
-        templateHtml={templateHtml}
-        fileName={templateFileName}
+        templates={templates}
+        hasSteps={steps.length > 0}
+        nextStepOrder={steps.length === 0 ? 1 : Math.max(...steps.map((step) => step.step_order)) + 1}
       />
 
       {sortedSteps.length === 0 ? (
@@ -414,6 +505,7 @@ export default function SequenceDetailPage() {
         <div className="space-y-3 max-w-2xl">
           {sortedSteps.map((step) => {
             const count = step.sequence_step_attachments?.length ?? 0
+            const templateName = templates.find((item) => item.id === step.template_id)?.name
             return (
               <Card key={step.id} className="border-slate-200 shadow-sm">
                 <CardContent className="p-5">
@@ -425,7 +517,9 @@ export default function SequenceDetailPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 truncate">{step.subject}</p>
+                        <p className="font-medium text-slate-900 truncate">
+                          <VariableText text={step.subject} />
+                        </p>
                         <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
                           {stepPreviewText(step)}
                         </p>
@@ -434,6 +528,7 @@ export default function SequenceDetailPage() {
                             <p className="text-xs text-indigo-600 inline-flex items-center gap-1">
                               <Palette className="h-3 w-3" />
                               {t['sequences.styledBadge']}
+                              {templateName ? ` · ${templateName}` : ''}
                             </p>
                           )}
                           <p className="text-xs text-slate-400">
@@ -535,15 +630,32 @@ export default function SequenceDetailPage() {
                   <div className="space-y-1.5">
                     <Label>{t['sequences.subject']}</Label>
                     <Input
-                      {...register('subject')}
+                      {...subjectField}
                       ref={(el) => {
-                        register('subject').ref(el)
+                        subjectField.ref(el)
                         subjectInputRef.current = el
                       }}
+                      onFocus={(e) => {
+                        insertTargetRef.current = 'subject'
+                        rememberSubjectCaret(e.currentTarget)
+                      }}
+                      onBlur={(e) => {
+                        subjectField.onBlur(e)
+                        rememberSubjectCaret(e.currentTarget)
+                      }}
+                      onChange={(e) => {
+                        subjectField.onChange(e)
+                        rememberSubjectCaret(e.currentTarget)
+                      }}
+                      onClick={(e) => rememberSubjectCaret(e.currentTarget)}
+                      onKeyUp={(e) => rememberSubjectCaret(e.currentTarget)}
+                      onSelect={(e) => rememberSubjectCaret(e.currentTarget)}
                       onDrop={(e) => {
                         e.preventDefault()
                         const variable = e.dataTransfer.getData('text/plain')
-                        if (variable?.startsWith('{{')) insertVariable(variable)
+                        if (!variable?.startsWith('{{')) return
+                        const index = caretIndexFromPoint(e.currentTarget, e.clientX, e.clientY)
+                        insertIntoSubject(variable, index, index)
                       }}
                       onDragOver={(e) => e.preventDefault()}
                       className={errors.subject ? 'border-red-300' : ''}
@@ -638,7 +750,7 @@ export default function SequenceDetailPage() {
                     <label
                       className={cn(
                         'flex items-center gap-2 text-sm select-none',
-                        templateHtml || editingStep?.styled_html
+                        templates.length > 0 || editingStep?.styled_html
                           ? 'cursor-pointer text-slate-700'
                           : 'cursor-not-allowed text-slate-400',
                       )}
@@ -647,32 +759,63 @@ export default function SequenceDetailPage() {
                         type="checkbox"
                         className="h-4 w-4 accent-indigo-600"
                         checked={useTemplate}
-                        disabled={!templateHtml && !editingStep?.styled_html}
+                        disabled={templates.length === 0 && !editingStep?.styled_html}
                         onChange={(e) => onToggleTemplate(e.target.checked)}
                       />
                       {t['sequences.useTemplate']}
                     </label>
-                    {useTemplate && templateHtml && (
+                    {useTemplate && selectedTemplate && (
                       <Button type="button" variant="ghost" size="sm" onClick={resetToTemplate}>
                         <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                         {t['sequences.resetToTemplate']}
                       </Button>
                     )}
                   </div>
+                  {useTemplate && templates.length > 1 && (
+                    <div className="space-y-1.5 pb-1">
+                      <Label>{t['sequences.templateSelect']}</Label>
+                      <Select
+                        value={knownTemplateId ?? null}
+                        onValueChange={(value) => {
+                          if (typeof value === 'string') chooseTemplate(value)
+                        }}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={t['sequences.templateSelectPlaceholder']} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {templates.map((template) => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!knownTemplateId && errors.styled_html && (
+                        <p className="text-xs text-red-500">{t['sequences.templateSelectPlaceholder']}</p>
+                      )}
+                    </div>
+                  )}
+                  {useTemplate && templates.length === 1 && selectedTemplate && (
+                    <p className="pb-1 text-xs text-slate-500">{selectedTemplate.name}</p>
+                  )}
                   <p className="pb-1 text-xs text-slate-400">
                     {useTemplate
                       ? t['sequences.useTemplateHint']
-                      : !templateHtml && !editingStep?.styled_html
+                      : templates.length === 0 && !editingStep?.styled_html
                         ? t['sequences.useTemplateUnavailable']
                         : null}
                   </p>
                   {useTemplate ? (
-                    <StyledHtmlEditor
-                      key={styledEditorKey}
-                      ref={styledEditorRef}
-                      initialHtml={getValues('styled_html') || ''}
-                      onChange={(html) => setValue('styled_html', html, { shouldValidate: true })}
-                    />
+                    showStyledEditor ? (
+                      <StyledHtmlEditor
+                        key={styledEditorKey}
+                        ref={styledEditorRef}
+                        initialHtml={getValues('styled_html') || ''}
+                        onChange={(html) => setValue('styled_html', html, { shouldValidate: true })}
+                        onFocus={focusEditorTarget}
+                      />
+                    ) : null
                   ) : (
                     <Controller
                       name="body"
@@ -683,6 +826,7 @@ export default function SequenceDetailPage() {
                           ref={bodyEditorRef}
                           value={field.value || ''}
                           onChange={field.onChange}
+                          onFocus={focusEditorTarget}
                           hasError={!!errors.body}
                           rows={12}
                         />
