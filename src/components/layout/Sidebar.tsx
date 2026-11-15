@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   ShieldCheck,
+  ListChecks,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useCompanyStore } from '@/stores/companyStore'
@@ -30,7 +31,14 @@ const navItems = [
 ] as const
 
 const adminNavItems = [
-  { key: 'admin.title', href: '/admin', icon: ShieldCheck },
+  { key: 'admin.title', href: '/admin', icon: ShieldCheck, sub: false, match: ['/admin'] },
+  {
+    key: 'admin.jobs.navTitle',
+    href: '/admin/jobs',
+    icon: ListChecks,
+    sub: true,
+    match: ['/admin/jobs', '/admin/campaigns'],
+  },
 ] as const
 
 export function Sidebar() {
@@ -87,13 +95,17 @@ export function Sidebar() {
         {user?.role === 'global_admin' && (
           <>
             <Separator className="my-2" />
-            {adminNavItems.map(({ key, href, icon: Icon }) => {
-              const isActive = pathname === href || pathname.startsWith(href + '/')
+            {adminNavItems.map(({ key, href, icon: Icon, sub, match }) => {
+              const isActive = sub
+                ? match.some((m) => pathname === m || pathname.startsWith(m + '/'))
+                : pathname === href
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  className={`flex items-center gap-3 py-2 rounded-md text-sm transition-colors ${
+                    sub ? 'pl-9 pr-3' : 'px-3'
+                  } ${
                     isActive
                       ? 'bg-slate-100 text-indigo-600 font-medium'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'

@@ -202,6 +202,11 @@ export const updateMailboxEmailLimits = (
   id: string,
   limits: { daily_email_limit: number; weekly_email_limit: number }
 ) => api.patch(`/admin/mailboxes/${id}/limits`, limits).then((r) => r.data)
+export type AdminJobStatusFilter = 'pending' | 'processing' | 'sent' | 'failed' | 'all'
+export const getAdminJobs = (status: AdminJobStatusFilter) =>
+  api.get('/admin/jobs', { params: { status } }).then((r) => r.data)
+export const getAdminCampaign = (id: string) =>
+  api.get(`/admin/campaigns/${id}`).then((r) => r.data)
 
 // Org management
 export const getInvitations = () => api.get('/org/invitations').then((r) => r.data)

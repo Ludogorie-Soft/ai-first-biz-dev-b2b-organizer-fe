@@ -2,6 +2,8 @@ export const queryKeys = {
   admin: {
     pendingMailboxes: ['admin', 'pending-mailboxes'] as const,
     mailboxLimits: ['admin', 'mailbox-limits'] as const,
+    jobs: (status: string) => ['admin', 'jobs', status] as const,
+    campaign: (id: string) => ['admin', 'campaign', id] as const,
   },
   campaigns: {
     all: ['campaigns'] as const,
