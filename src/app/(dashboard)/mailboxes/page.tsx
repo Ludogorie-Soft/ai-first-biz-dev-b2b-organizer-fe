@@ -13,6 +13,7 @@ import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { MailboxWarmupBadge, MailboxWarmupDialog } from '@/components/shared/MailboxWarmup'
 import { VariableEditor, normalizeBodyHtml } from '@/components/sequences/VariableEditor'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,6 +47,7 @@ interface Mailbox {
   weekly_email_limit: number
   effective_daily_limit: number
   is_warming_up: boolean
+  warmup_ends_at: string | null
   signature: string | null
   friendly_warmup_pending: boolean
 }
@@ -69,6 +71,7 @@ export default function MailboxesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [signatureMailbox, setSignatureMailbox] = useState<Mailbox | null>(null)
   const [signatureHtml, setSignatureHtml] = useState('')
+  const [warmupTarget, setWarmupTarget] = useState<{ id: string; email: string; warmedUp: boolean } | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.mailboxes.all,
@@ -131,6 +134,17 @@ export default function MailboxesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes.all })
       toast.success(t['common.success'])
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  const warmupMutation = useMutation({
+    mutationFn: ({ id, warmedUp }: { id: string; warmedUp: boolean }) =>
+      updateMailbox(id, { warmed_up: warmedUp }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes.all })
+      toast.success(t['mailboxes.warmupUpdated'])
+      setWarmupTarget(null)
     },
     onError: () => toast.error(t['common.error']),
   })
@@ -251,6 +265,9 @@ export default function MailboxesPage() {
                   {t['mailboxes.dailyLimit']}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  {t['mailboxes.warmupStatus']}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   {t['mailboxes.weeklyLimit']}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -295,16 +312,10 @@ export default function MailboxesPage() {
                       {mb.daily_email_limit && mb.effective_daily_limit !== mb.daily_email_limit && (
                         <span className="text-slate-400 text-xs">/ {mb.daily_email_limit}</span>
                       )}
-                      {mb.is_warming_up && (
-                        <span
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"
-                          title={t['mailboxes.warmingUpTooltip']}
-                        >
-                          <Flame className="h-3 w-3" />
-                          {t['mailboxes.warmingUp']}
-                        </span>
-                      )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <MailboxWarmupBadge mailbox={mb} />
                   </TableCell>
                   <TableCell className="text-slate-900 text-sm font-medium">
                     {mb.weekly_email_limit ?? '—'}
@@ -317,6 +328,20 @@ export default function MailboxesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'hover:text-slate-700',
+                          mb.is_warming_up ? 'text-amber-600' : 'text-slate-400',
+                        )}
+                        onClick={() =>
+                          setWarmupTarget({ id: mb.id, email: mb.email, warmedUp: mb.is_warming_up })
+                        }
+                        title={mb.is_warming_up ? t['mailboxes.markWarmedUp'] : t['mailboxes.restartWarmup']}
+                      >
+                        <Flame className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -364,6 +389,15 @@ export default function MailboxesPage() {
           </Table>
         </div>
       )}
+
+      <MailboxWarmupDialog
+        target={warmupTarget}
+        pending={warmupMutation.isPending}
+        onCancel={() => setWarmupTarget(null)}
+        onConfirm={() =>
+          warmupTarget && warmupMutation.mutate({ id: warmupTarget.id, warmedUp: warmupTarget.warmedUp })
+        }
+      />
 
       {/* Edit Signature Dialog */}
       <Dialog

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ShieldCheck, Pencil } from 'lucide-react'
+import { ShieldCheck, Pencil, Flame } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,11 +13,13 @@ import {
   approveMailboxDomain,
   getAdminMailboxLimits,
   updateMailboxEmailLimits,
+  setAdminMailboxWarmup,
 } from '@/lib/api'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { MailboxWarmupBadge, MailboxWarmupDialog } from '@/components/shared/MailboxWarmup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -56,6 +58,9 @@ interface MailboxLimit {
   company_name: string
   daily_email_limit: number
   weekly_email_limit: number
+  effective_daily_limit: number
+  is_warming_up: boolean
+  warmup_ends_at: string | null
   sent_today: number
   sent_this_week: number
 }
@@ -76,6 +81,7 @@ export default function AdminPage() {
   const t = useTranslations()
   const queryClient = useQueryClient()
   const [editMailbox, setEditMailbox] = useState<MailboxLimit | null>(null)
+  const [warmupTarget, setWarmupTarget] = useState<{ id: string; email: string; warmedUp: boolean } | null>(null)
 
   // Pending mailboxes
   const { data: pendingData, isLoading: pendingLoading } = useQuery({
@@ -140,6 +146,17 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.mailboxLimits })
       toast.success(t['admin.limitsUpdated'])
       setEditMailbox(null)
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  const warmupMutation = useMutation({
+    mutationFn: ({ id, warmedUp }: { id: string; warmedUp: boolean }) =>
+      setAdminMailboxWarmup(id, warmedUp),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.mailboxLimits })
+      toast.success(t['mailboxes.warmupUpdated'])
+      setWarmupTarget(null)
     },
     onError: () => toast.error(t['common.error']),
   })
@@ -271,6 +288,9 @@ export default function AdminPage() {
                       {t['admin.company']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      {t['mailboxes.warmupStatus']}
+                    </TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                       {t['admin.sentToday']}
                     </TableHead>
                     <TableHead className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -291,11 +311,14 @@ export default function AdminPage() {
                       <TableCell className="font-medium text-slate-900 text-sm">{mb.email}</TableCell>
                       <TableCell className="text-slate-500 text-sm">{mb.company_name}</TableCell>
                       <TableCell className="text-sm">
+                        <MailboxWarmupBadge mailbox={mb} />
+                      </TableCell>
+                      <TableCell className="text-sm">
                         <span
                           className={
-                            mb.sent_today >= mb.daily_email_limit
+                            mb.sent_today >= mb.effective_daily_limit
                               ? 'text-red-600 font-semibold'
-                              : mb.sent_today >= mb.daily_email_limit * 0.8
+                              : mb.sent_today >= mb.effective_daily_limit * 0.8
                               ? 'text-amber-600 font-medium'
                               : 'text-slate-700'
                           }
@@ -304,7 +327,14 @@ export default function AdminPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-slate-700 text-sm font-medium">
-                        {mb.daily_email_limit}
+                        {mb.effective_daily_limit !== mb.daily_email_limit ? (
+                          <span title={t['mailboxes.warmingUpTooltip']}>
+                            {mb.effective_daily_limit}{' '}
+                            <span className="text-slate-400 text-xs font-normal">/ {mb.daily_email_limit}</span>
+                          </span>
+                        ) : (
+                          mb.daily_email_limit
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">
                         <span
@@ -323,14 +353,31 @@ export default function AdminPage() {
                         {mb.weekly_email_limit}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-slate-400 hover:text-indigo-600"
-                          onClick={() => openEdit(mb)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={
+                              mb.is_warming_up
+                                ? 'text-amber-600 hover:text-slate-700'
+                                : 'text-slate-400 hover:text-slate-700'
+                            }
+                            onClick={() =>
+                              setWarmupTarget({ id: mb.id, email: mb.email, warmedUp: mb.is_warming_up })
+                            }
+                            title={mb.is_warming_up ? t['mailboxes.markWarmedUp'] : t['mailboxes.restartWarmup']}
+                          >
+                            <Flame className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-slate-400 hover:text-indigo-600"
+                            onClick={() => openEdit(mb)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -340,6 +387,15 @@ export default function AdminPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <MailboxWarmupDialog
+        target={warmupTarget}
+        pending={warmupMutation.isPending}
+        onCancel={() => setWarmupTarget(null)}
+        onConfirm={() =>
+          warmupTarget && warmupMutation.mutate({ id: warmupTarget.id, warmedUp: warmupTarget.warmedUp })
+        }
+      />
 
       {/* Edit Limits Dialog */}
       <Dialog open={!!editMailbox} onOpenChange={(open) => !open && setEditMailbox(null)}>
