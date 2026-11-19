@@ -202,6 +202,8 @@ export const updateMailboxEmailLimits = (
   id: string,
   limits: { daily_email_limit: number; weekly_email_limit: number }
 ) => api.patch(`/admin/mailboxes/${id}/limits`, limits).then((r) => r.data)
+export const resumeAdminMailbox = (id: string) =>
+  api.patch(`/admin/mailboxes/${id}/resume`).then((r) => r.data)
 export const setAdminMailboxWarmup = (id: string, warmedUp: boolean) =>
   api.patch(`/admin/mailboxes/${id}/warmup`, { warmed_up: warmedUp }).then((r) => r.data)
 export type AdminJobStatusFilter = 'pending' | 'processing' | 'sent' | 'failed' | 'all'

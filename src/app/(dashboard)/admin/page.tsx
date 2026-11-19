@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ShieldCheck, Pencil, Flame } from 'lucide-react'
+import { ShieldCheck, Pencil, Flame, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,7 +14,10 @@ import {
   getAdminMailboxLimits,
   updateMailboxEmailLimits,
   setAdminMailboxWarmup,
+  resumeAdminMailbox,
 } from '@/lib/api'
+import { pauseReasonText, pausedSinceText, type MailboxPauseInfo } from '@/lib/mailboxPause'
+import { StatusBadge } from '@/components/shared/StatusBadge'
 import { queryKeys } from '@/lib/queryKeys'
 import { useTranslations } from '@/hooks/useTranslations'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -51,7 +54,7 @@ interface PendingMailbox {
   pending_campaign_count: number
 }
 
-interface MailboxLimit {
+interface MailboxLimit extends MailboxPauseInfo {
   id: string
   email: string
   company_id: string
@@ -82,6 +85,7 @@ export default function AdminPage() {
   const queryClient = useQueryClient()
   const [editMailbox, setEditMailbox] = useState<MailboxLimit | null>(null)
   const [warmupTarget, setWarmupTarget] = useState<{ id: string; email: string; warmedUp: boolean } | null>(null)
+  const [resumeTarget, setResumeTarget] = useState<MailboxLimit | null>(null)
 
   // Pending mailboxes
   const { data: pendingData, isLoading: pendingLoading } = useQuery({
@@ -161,6 +165,19 @@ export default function AdminPage() {
     onError: () => toast.error(t['common.error']),
   })
 
+  const resumeMutation = useMutation({
+    mutationFn: (id: string) => resumeAdminMailbox(id),
+    onSuccess: (result: { rescheduled_jobs?: number }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.mailboxLimits })
+      queryClient.invalidateQueries({ queryKey: queryKeys.mailboxes.all })
+      toast.success(t['admin.resumed'].replace('{count}', String(result?.rescheduled_jobs ?? 0)))
+      setResumeTarget(null)
+    },
+    onError: () => toast.error(t['common.error']),
+  })
+
+  const pausedMailboxes = mailboxLimits.filter((mb) => mb.is_paused)
+
   function openEdit(mb: MailboxLimit) {
     setEditMailbox(mb)
     reset({ daily_email_limit: mb.daily_email_limit, weekly_email_limit: mb.weekly_email_limit })
@@ -169,6 +186,42 @@ export default function AdminPage() {
   return (
     <div>
       <PageHeader title={t['admin.title']} />
+
+      {pausedMailboxes.length > 0 && (
+        <section className="mb-6 rounded-lg border border-red-300 bg-red-50">
+          <div className="flex items-start gap-3 px-4 pt-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+            <div>
+              <h2 className="text-sm font-semibold text-red-900">
+                {t['admin.pausedMailboxesTitle']} ({pausedMailboxes.length})
+              </h2>
+              <p className="text-sm text-red-800">{t['admin.pausedMailboxesDesc']}</p>
+            </div>
+          </div>
+          <ul className="divide-y divide-red-200 px-4 pb-2 pt-2">
+            {pausedMailboxes.map((mb) => (
+              <li key={mb.id} className="flex items-center justify-between gap-4 py-3">
+                <div className="text-sm text-red-800">
+                  <p className="font-medium text-red-900">
+                    {mb.email} <span className="font-normal text-red-700">· {mb.company_name}</span>
+                  </p>
+                  <p>
+                    <span className="font-medium">{t['mailboxPause.reasonLabel']}</span> {pauseReasonText(mb, t)}{' '}
+                    {pausedSinceText(mb, t)}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="flex-shrink-0 bg-indigo-600 text-white hover:bg-indigo-700"
+                  onClick={() => setResumeTarget(mb)}
+                >
+                  {t['admin.resume']}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <Tabs defaultValue="pending-mailboxes">
         <TabsList className="mb-6">
@@ -308,7 +361,12 @@ export default function AdminPage() {
                 <TableBody>
                   {mailboxLimits.map((mb) => (
                     <TableRow key={mb.id}>
-                      <TableCell className="font-medium text-slate-900 text-sm">{mb.email}</TableCell>
+                      <TableCell className="font-medium text-slate-900 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          {mb.email}
+                          {mb.is_paused && <StatusBadge status="paused" label={t['mailboxes.paused']} />}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-slate-500 text-sm">{mb.company_name}</TableCell>
                       <TableCell className="text-sm">
                         <MailboxWarmupBadge mailbox={mb} />
@@ -396,6 +454,36 @@ export default function AdminPage() {
           warmupTarget && warmupMutation.mutate({ id: warmupTarget.id, warmedUp: warmupTarget.warmedUp })
         }
       />
+
+      {/* Resume Mailbox Dialog */}
+      <Dialog open={!!resumeTarget} onOpenChange={(open) => !open && setResumeTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t['admin.resumeConfirmTitle']}</DialogTitle>
+          </DialogHeader>
+          {resumeTarget && (
+            <div className="space-y-3 text-sm text-slate-600">
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-800">
+                <span className="font-medium">{t['mailboxPause.reasonLabel']}</span>{' '}
+                {pauseReasonText(resumeTarget, t)}
+              </p>
+              <p>{t['admin.resumeConfirmDesc'].replace('{email}', resumeTarget.email)}</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResumeTarget(null)} disabled={resumeMutation.isPending}>
+              {t['common.cancel']}
+            </Button>
+            <Button
+              className="bg-indigo-600 text-white hover:bg-indigo-700"
+              disabled={resumeMutation.isPending}
+              onClick={() => resumeTarget && resumeMutation.mutate(resumeTarget.id)}
+            >
+              {resumeMutation.isPending ? t['admin.resuming'] : t['admin.resume']}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Limits Dialog */}
       <Dialog open={!!editMailbox} onOpenChange={(open) => !open && setEditMailbox(null)}>

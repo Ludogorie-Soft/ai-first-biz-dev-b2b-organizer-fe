@@ -35,12 +35,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { pauseReasonText, pausedSinceText, type MailboxPauseInfo } from '@/lib/mailboxPause'
 
-interface Mailbox {
+interface Mailbox extends MailboxPauseInfo {
   id: string
   email: string
   ses_status: 'pending' | 'active'
-  is_paused: boolean
   warmup_started_at: string
   created_at: string
   daily_email_limit: number
@@ -303,6 +303,12 @@ export default function MailboxesPage() {
                         </span>
                       )}
                     </div>
+                    {mb.is_paused && mb.ses_status !== 'pending' && (
+                      <p className="mt-1 max-w-xs text-xs text-red-700">
+                        <span className="font-medium">{t['mailboxPause.reasonLabel']}</span>{' '}
+                        {pauseReasonText(mb, t)} {pausedSinceText(mb, t)}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm">
                     <div className="flex items-center gap-1.5">
